@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finanças do Caio</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
+  
+  :root{
+    --bg:#f2f4f6; --card:#ffffff; --linha:#e1e6eb; --linha2:#eef1f4;
+    --txt:#14202b; --fraco:#5b6876; --apagado:#8a96a3;
+    --acento:#1d5c7a; --acentobg:#e6eff4;
+    --neg:#b4382f; --pos:#1f7a4d; --alerta:#a86512;
+    --negbg:#fbecea; --posbg:#e8f4ee; --alertabg:#fbf1e3;
+    --fonte:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e141a; --card:#151d25; --linha:#25303b; --linha2:#1c252e;
+      --txt:#e6edf3; --fraco:#97a5b2; --apagado:#6c7a87;
+      --acento:#72b4d4; --acentobg:#17303d;
+      --neg:#f08a7e; --pos:#6fd3a0; --alerta:#e3a95c;
+      --negbg:#2d1a18; --posbg:#13281e; --alertabg:#2b2215;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e141a; --card:#151d25; --linha:#25303b; --linha2:#1c252e;
+    --txt:#e6edf3; --fraco:#97a5b2; --apagado:#6c7a87;
+    --acento:#72b4d4; --acentobg:#17303d;
+    --neg:#f08a7e; --pos:#6fd3a0; --alerta:#e3a95c;
+    --negbg:#2d1a18; --posbg:#13281e; --alertabg:#2b2215;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--fonte);
+       font-size:14.5px;line-height:1.45;-webkit-text-size-adjust:100%}
+  .wrap{max-width:1180px;margin:0 auto;padding-block:22px 64px;
+        padding-left:max(16px,env(safe-area-inset-left,0px));
+        padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .neg{color:var(--neg)} .pos{color:var(--pos)}
+  .det{color:var(--fraco);font-size:12.5px}
+  .vazio{color:var(--fraco);padding:14px 4px;font-size:13.5px}
+  button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--linha);
+         border-radius:8px;padding:6px 12px;cursor:pointer}
+  button:hover{border-color:var(--acento)}
+  button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acento);outline-offset:1px}
+  button[aria-pressed="true"]{background:var(--acento);color:var(--card);border-color:var(--acento)}
+
+  .topo{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;
+        flex-wrap:wrap;margin-bottom:18px}
+  h1{font-size:20px;margin:0;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+  .sub{color:var(--fraco);font-size:12.5px;margin-top:3px}
+  .resumo{display:flex;gap:10px;flex-wrap:wrap}
+  .fig{background:var(--card);border:1px solid var(--linha);border-radius:12px;
+       padding:12px 16px;min-width:0}
+  .fig .rot{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--fraco);font-weight:600}
+  .fig .v{font-size:22px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
+  .fig.principal{background:var(--acento);border-color:var(--acento);color:var(--card)}
+  .fig.principal .rot{color:var(--card);opacity:.8}
+  .fig.principal .v{font-size:26px}
+  .fig .v.neg{color:var(--neg)}
+
+  #alertas{display:grid;gap:8px;margin-bottom:22px}
+  #alertas:empty{display:none}
+  .alerta{border-left:4px solid var(--alerta);background:var(--alertabg);
+          border-radius:8px;padding:10px 14px;font-size:13.5px;color:var(--txt)}
+  .alerta.grave{border-left-color:var(--neg);background:var(--negbg)}
+  .alerta b{display:block;font-weight:600;margin-bottom:1px}
+
+  .grade{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+         grid-template-rows:auto auto 1fr;gap:18px 22px;align-items:start}
+  #sec-mes{grid-column:1;grid-row:1 / span 3}
+  #sec-agenda{grid-column:2;grid-row:1}
+  #sec-cartoes{grid-column:2;grid-row:2}
+  #sec-dividas{grid-column:2;grid-row:3}
+  .bloco{min-width:0}
+  h2{font-size:12px;margin:0 0 8px;font-weight:600;text-transform:uppercase;
+     letter-spacing:.08em;color:var(--fraco)}
+  .bloco + .bloco, .sub-bloco{margin-top:0}
+  .sub-bloco h2{margin-top:22px}
+  .card{background:var(--card);border:1px solid var(--linha);border-radius:12px;
+        padding:4px 14px;overflow-x:auto}
+  .nota{color:var(--fraco);font-size:12px;margin:8px 2px 0;max-width:68ch}
+
+  .nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .nav .mes{font-size:18px;font-weight:600;min-width:170px}
+  .nav .direita{margin-left:auto;display:flex;gap:8px}
+  .nav button{padding:5px 11px}
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .kpi{background:var(--card);border:1px solid var(--linha);border-radius:10px;padding:10px 12px;min-width:0}
+  .kpi .rot{font-size:11px;color:var(--fraco);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+  .kpi .val{font-size:18px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  #teto{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:12.5px;color:var(--fraco)}
+  #teto[hidden]{display:none}
+  #teto .barra{flex:1;margin:0}
+  .barra{height:5px;background:var(--linha2);border-radius:3px;overflow:hidden}
+  .barra i{display:block;height:100%;background:var(--acento);border-radius:3px}
+  .barra.estourou i{background:var(--neg)}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;
+     color:var(--apagado);font-weight:600;padding:10px 6px 6px;border-bottom:1px solid var(--linha)}
+  td{padding:8px 6px;border-bottom:1px solid var(--linha2);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .r{text-align:right}
+  .dia-h td{font-weight:600;font-size:12.5px;color:var(--fraco);padding-top:12px;
+            border-bottom:1px solid var(--linha)}
+  .dia-h td b{color:var(--txt)}
+  .dia-neg td{background:var(--negbg)}
+  .tag{display:inline-block;font-size:10px;padding:0 6px;border-radius:999px;
+       border:1px solid var(--linha);color:var(--fraco);margin-left:6px;vertical-align:1px;line-height:16px}
+  .quando{width:84px;white-space:nowrap}
+  .quando b{display:block;font-size:13px;font-variant-numeric:tabular-nums}
+  .total td{border-top:1px solid var(--linha);font-weight:600}
+
+  #sync{margin:0 2px 8px}
+  .estados{display:inline-flex;margin-top:6px;border:1px solid var(--linha);border-radius:8px;overflow:hidden}
+  .estados button{border:0;border-radius:0;padding:4px 10px;font-size:12px;background:var(--card)}
+  .estados button + button{border-left:1px solid var(--linha)}
+  .estados button[aria-pressed="true"]{background:var(--acento);color:var(--card)}
+  .conf-ok td{background:var(--posbg)}
+  .conf-nao td{color:var(--apagado)}
+  .conf-nao td b{text-decoration:line-through}
+  .edit{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+  .edit input,.edit select{font:inherit;font-size:12.5px;color:inherit;
+    background:var(--card);border:1px solid var(--linha);border-radius:7px;padding:4px 7px}
+  .edit input[type=number]{width:92px;text-align:right;font-variant-numeric:tabular-nums}
+
+  .lancar-barra{display:flex;justify-content:space-between;align-items:center;gap:12px;
+                flex-wrap:wrap;margin:-6px 0 14px}
+  #cartao-dia{font-size:13px} #cartao-dia b{color:var(--txt)}
+  button.primario{background:var(--acento);border-color:var(--acento);color:var(--card);font-weight:600}
+  .painel{padding:14px 16px;margin-bottom:18px}
+  .campos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px}
+  .campos label{display:flex;flex-direction:column;gap:4px;font-size:11.5px;font-weight:600;
+                letter-spacing:.04em;text-transform:uppercase;color:var(--fraco);min-width:0}
+  .campos label.largo{grid-column:span 3}
+  .campos label.marca{flex-direction:row;align-items:center;text-transform:none;letter-spacing:0;
+                      font-size:13px;font-weight:500;color:var(--txt);grid-column:span 2}
+  .campos input,.campos select{font:inherit;font-size:14px;font-weight:400;text-transform:none;
+    letter-spacing:0;color:var(--txt);background:var(--card);border:1px solid var(--linha);
+    border-radius:8px;padding:7px 9px;min-width:0;width:100%}
+  .campos input[type=checkbox]{width:auto}
+  .campos input[type=number]{font-variant-numeric:tabular-nums}
+  .acoes{display:flex;gap:8px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  #g-pendentes table{margin-top:12px}
+  footer{margin-top:34px;padding-top:12px;border-top:1px solid var(--linha);
+         color:var(--fraco);font-size:12px;max-width:90ch}
+
+  @media(max-width:900px){
+    .grade{grid-template-columns:minmax(0,1fr);grid-template-rows:none}
+    #sec-mes,#sec-agenda,#sec-cartoes,#sec-dividas{grid-column:auto;grid-row:auto}
+    #sec-agenda{order:1} #sec-mes{order:2} #sec-cartoes{order:3} #sec-dividas{order:4}
+  }
+  @media(max-width:560px){
+    .resumo{width:100%;display:grid;grid-template-columns:1fr 1fr}
+    .fig.principal{grid-column:1 / -1}
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .campos{grid-template-columns:1fr 1fr}
+    .campos label.largo,.campos label.marca{grid-column:1 / -1}
+    .lancar-barra{justify-content:stretch} .lancar-barra button{width:100%}
+    .nav .mes{min-width:0;font-size:16px}
+    .opcional{display:none}
+    .card{padding:2px 10px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topo">
+    <div>
+      <h1>Finanças do Caio</h1>
+      <div class="sub" id="asof"></div>
+    </div>
+    <div class="resumo">
+      <div class="fig principal"><div class="rot">Saldo nas contas hoje</div>
+        <div class="v num" id="saldo-hoje"></div></div>
+      <div class="fig"><div class="rot" id="resumo-fim-rot">Fim do mês</div>
+        <div class="v num" id="resumo-fim"></div></div>
+      <div class="fig"><div class="rot">Fica negativo em</div>
+        <div class="v" id="resumo-neg"></div></div>
+    </div>
+  </header>
+
+  <div class="lancar-barra">
+    <div id="cartao-dia" class="det"></div>
+    <button id="abre-lancar" class="primario" aria-expanded="false" aria-controls="lancar">+ Lançar gasto</button>
+  </div>
+  <section id="lancar" class="card painel" hidden>
+    <form id="form-lancar" autocomplete="off">
+      <div class="campos">
+        <label>Valor (R$)<input id="g-valor" type="number" inputmode="decimal" step="0.01" min="0.01" required></label>
+        <label class="largo">Descrição<input id="g-desc" type="text" maxlength="80" placeholder="ex.: mercado, café, lavagem" required></label>
+        <label>Onde<select id="g-conta"></select></label>
+        <label>Categoria<select id="g-cat"></select></label>
+        <label>Data<input id="g-data" type="date" required></label>
+        <label id="g-parc-rot">Parcelas<input id="g-parc" type="number" min="1" max="24" step="1" value="1"></label>
+        <label class="marca"><input id="g-entrada" type="checkbox"> É dinheiro entrando</label>
+      </div>
+      <div class="acoes">
+        <button type="submit" class="primario">Lançar</button>
+        <button type="button" id="fecha-lancar">Fechar</button>
+        <span id="g-msg" class="det" role="status"></span>
+      </div>
+    </form>
+    <div id="g-pendentes"></div>
+  </section>
+
+  <div id="alertas"></div>
+
+  <div class="grade">
+
+    <section class="bloco" id="sec-mes">
+      <div class="nav">
+        <button id="ant" aria-label="Mês anterior">&larr;</button>
+        <span class="mes" id="mes-rot"></span>
+        <button id="prox" aria-label="Próximo mês">&rarr;</button>
+        <div class="direita">
+          <button id="hoje-btn">Mês atual</button>
+          <button id="baixar" title="Salva uma cópia do dados.json">Baixar dados</button>
+        </div>
+      </div>
+      <div class="grid" id="kpis"></div>
+      <div id="teto" hidden></div>
+
+      <div class="sub-bloco">
+        <h2>Assinaturas e contas do mês</h2>
+        <p class="det" id="sync"></p>
+        <div id="naosalvo" class="alerta grave" hidden></div>
+        <div class="card"><table id="confirma"><tbody></tbody></table></div>
+        <p class="nota">Marque <b>Entrou</b> quando a cobrança cair; o valor muda na fatura e
+        no saldo na hora. Se veio em outro dia, cartão ou valor, corrija nos campos.
+        <b>Não veio</b> tira a cobrança só deste mês — para encerrar uma assinatura de vez,
+        me avise.</p>
+      </div>
+
+      <div class="sub-bloco">
+        <h2>Dia a dia</h2>
+        <div class="card"><table id="tl"><tbody></tbody></table></div>
+      </div>
+
+      <div class="sub-bloco">
+        <h2>Gasto por categoria</h2>
+        <div class="card"><table id="cat"><tbody></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="bloco" id="sec-agenda">
+      <h2>Próximos vencimentos</h2>
+      <div class="card"><table id="agenda"><tbody></tbody></table></div>
+      <p class="nota">Nenhuma dessas contas dá desconto para pagar antes: pagar na data é
+      sempre igual ou melhor. Em <b>débito automático</b>, o saldo precisa estar na conta
+      no dia anterior.</p>
+    </section>
+
+    <section class="bloco" id="sec-cartoes">
+      <h2>Cartões</h2>
+      <div class="card"><table id="cartoes"><tbody></tbody></table></div>
+    </section>
+
+    <section class="bloco" id="sec-dividas">
+      <h2>Dívidas</h2>
+      <div class="card"><table id="dividas"><tbody></tbody></table></div>
+    </section>
+
+  </div>
+
+  <footer id="rodape"></footer>
+</div>
+
+<script>
+const DADOS = /*__DADOS__*/;
+
+const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto",
+             "setembro","outubro","novembro","dezembro"];
+const brl = v => (v<0?"-":"")+"R$ "+Math.abs(v).toLocaleString("pt-BR",
+                 {minimumFractionDigits:2,maximumFractionDigits:2});
+const ultimoDia=(a,m)=>new Date(a,m+1,0).getDate();
+const dataNo=(a,m,d)=>new Date(a,m,Math.min(d,ultimoDia(a,m)),12,0,0);
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+
+             String(d.getDate()).padStart(2,"0");
+const parse=s=>{const[a,m,d]=s.split("-").map(Number);return new Date(a,m-1,d,12,0,0)};
+const addMes=(d,n)=>new Date(d.getFullYear(),d.getMonth()+n,1,12,0,0);
+const chaveMes=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const BASE = parse(DADOS.atualizado_em);
+const HORIZONTE = 15;
+const FIM = addMes(BASE, HORIZONTE);
+
+const conta = id => DADOS.contas.find(c=>c.id===id);
+const CARENCIA_DIAS = 7;
+const INICIO_CARENCIA = new Date(BASE.getTime() - CARENCIA_DIAS*864e5);
+const cat   = id => DADOS.categorias.find(c=>c.id===id);
+
+function fechamentoDe(cartao, data){
+  let f = dataNo(data.getFullYear(), data.getMonth(), cartao.fecha_dia);
+  if (data >= f) f = dataNo(data.getFullYear(), data.getMonth()+1, cartao.fecha_dia);
+  return f;
+}
+function vencimentoDe(cartao, fechamento){
+  const mesmoMes = cartao.vence_dia > cartao.fecha_dia;
+  let v = dataNo(fechamento.getFullYear(), fechamento.getMonth() + (mesmoMes?0:1),
+                 cartao.vence_dia);
+  
+  while (v <= fechamento)
+    v = dataNo(v.getFullYear(), v.getMonth()+1, cartao.vence_dia);
+  return v;
+}
+
+function confirmacaoDe(desc, mes){
+  return (DADOS.confirmacoes||[]).find(c => c.desc === desc &&
+                                            c.competencia === mes) || null;
+}
+
+function geraSerie(item, tipoOrigem){
+  const out=[];
+  
+  const iniReal = item.inicio ? parse(item.inicio) : null;
+  
+  const compra = item.compra ? parse(item.compra) : null;
+  
+  const fatoDesde = item.fato_desde ? parse(item.fato_desde) : null;
+  const ini = iniReal || BASE;
+  const fim = item.fim ? parse(item.fim) : FIM;
+  
+  let partida = new Date(Math.max(BASE, ini).valueOf());
+  if (tipoOrigem === "recorrencia" && INICIO_CARENCIA < partida) partida = INICIO_CARENCIA;
+  if (compra && compra < partida) partida = compra;
+  if (fatoDesde && fatoDesde < partida) partida = fatoDesde;
+  if (tipoOrigem === "recorrencia")
+    (DADOS.confirmacoes||[]).filter(c => c.desc === item.desc).forEach(c => {
+      const m = parse(c.competencia + "-01");
+      if (m < partida) partida = m;
+    });
+  let cursor = new Date(partida.getFullYear(), partida.getMonth(), 1, 12, 0, 0);
+  let restantes = item.restantes != null ? item.restantes : Infinity;
+
+  while (cursor <= FIM && restantes > 0){
+    const d  = dataNo(cursor.getFullYear(), cursor.getMonth(), item.dia);
+    const cf = tipoOrigem === "recorrencia"
+             ? confirmacaoDe(item.desc, chaveMes(d)) : null;
+
+    if (cf && cf.estado === "cancelado"){ cursor = addMes(cursor,1); continue; }
+
+    const naSerie = (!iniReal || d >= iniReal) && d <= fim && d <= FIM;
+    
+    const atrasada = !cf && tipoOrigem === "recorrencia" && d < BASE &&
+                     d >= INICIO_CARENCIA;
+    const dentro = cf ? naSerie
+                 : (naSerie && (d >= BASE || (compra && d >= compra) ||
+                                (fatoDesde && d >= fatoDesde) || atrasada));
+    if (dentro){
+      out.push({ data: (cf && cf.data) ? parse(cf.data) : d,
+                 desc:item.desc,
+                 valor:(cf && cf.valor != null) ? cf.valor : item.valor,
+                 tipo:item.tipo || "saida",
+                 conta:(cf && cf.conta) ? cf.conta : item.conta,
+                 categoria:item.categoria, origem:tipoOrigem,
+                 confirmado: !!cf, atrasada: atrasada && naSerie,
+                 obs:item.obs||null });
+      restantes--;
+    }
+    cursor = addMes(cursor,1);
+  }
+  return out;
+}
+
+let LANC, REAIS, AJUSTE_SALDO, GASTO_VAR, CARTOES, FATURAS, CAIXA,
+    SALDO_INICIAL, PRIMEIRO_NEG;
+const OV = DADOS.orcamento_variavel;
+
+function empurra(l){
+  if (l.data > FIM) return;
+  const c = conta(l.conta); if (!c) return;
+
+  if (c.tipo !== "cartao" && c.saldo_em && (l.origem === "real" || l.confirmado)) {
+    const s = parse(c.saldo_em);
+    if (l.data < s || (iso(l.data) === iso(s) && !l.depoisConf)) return;
+  }
+  if (l.data >= BASE){ LANC.push(l); return; }
+  if (c.tipo === "cartao"){
+    const ref = c.fatura_aberta_em ? parse(c.fatura_aberta_em) : null;
+    if (!ref || l.data > ref) LANC.push(l);
+  } else {
+    const ref = c.saldo_em ? parse(c.saldo_em) : null;
+    if (!ref || l.data > ref || (iso(l.data) === iso(ref) && l.depoisConf))
+      AJUSTE_SALDO += (l.tipo === "entrada" ? l.valor : -l.valor);
+  }
+}
+
+let GASTOS_APP = [];
+function appParaModelo(){
+  const ja = new Set([...(DADOS.lancamentos||[]), ...DADOS.parcelamentos]
+                     .map(x => x.origem_app_id).filter(Boolean));
+  const lanc = [], parc = [];
+  GASTOS_APP.filter(g => !ja.has(g.id)).forEach(g => {
+    const n = Math.max(1, Math.round(g.parcelas || 1));
+    if (n > 1){
+      parc.push({ desc:g.desc, valor:Math.round(g.valor / n * 100) / 100,
+                  dia:parse(g.data).getDate(), conta:g.conta, categoria:g.categoria,
+                  restantes:n, fim:null, compra:g.data, origem_app_id:g.id });
+    } else {
+      lanc.push({ data:g.data, desc:g.desc, valor:g.valor, tipo:g.tipo || "saida",
+                  conta:g.conta, categoria:g.categoria, estado:"confirmado",
+                  depois_da_conferencia:true, origem_app_id:g.id });
+    }
+  });
+  return { lanc, parc };
+}
+
+function calcula(){
+LANC = []; AJUSTE_SALDO = 0;
+const APP = appParaModelo();
+DADOS.recorrencias.forEach(r => geraSerie(r,"recorrencia").forEach(empurra));
+DADOS.parcelamentos.concat(APP.parc).forEach(p => geraSerie(
+  {...p, tipo:"saida"}, "parcela").forEach(empurra));
+
+REAIS = (DADOS.lancamentos||[]).concat(APP.lanc)
+  .filter(l => l.estado !== "cancelado")
+  .map(l => ({ data:parse(l.data), desc:l.desc, valor:l.valor,
+               tipo:l.tipo||"saida", conta:l.conta, categoria:l.categoria,
+               origem:"real", depoisConf: !!l.depois_da_conferencia }));
+REAIS.forEach(empurra);
+
+GASTO_VAR = {};
+if (OV) REAIS.filter(l => l.categoria === OV.categoria && l.tipo === "saida")
+             .forEach(l => { const k = chaveMes(l.data);
+                             GASTO_VAR[k] = (GASTO_VAR[k]||0) + l.valor; });
+
+if (OV && OV.valor_mensal > 0){
+  let c = new Date(BASE.getFullYear(), BASE.getMonth(), 1, 12, 0, 0);
+  while (c <= FIM){
+    
+    const ini = OV.desde ? parse(OV.desde) : BASE;
+    const parcial = chaveMes(c) === chaveMes(ini)
+      ? (ultimoDia(ini.getFullYear(), ini.getMonth()) - ini.getDate() + 1) /
+         ultimoDia(ini.getFullYear(), ini.getMonth())
+      : (c < ini ? 0 : 1);
+    const restante = Math.max(0, OV.valor_mensal*parcial - (GASTO_VAR[chaveMes(c)]||0));
+    const marcos = [7,14,21,28]
+      .map(dia => dataNo(c.getFullYear(), c.getMonth(), dia))
+      .filter(d => d >= BASE && d <= FIM);
+    if (marcos.length && restante > 0.004)
+      marcos.forEach(d => LANC.push({
+        data:d, desc:(OV.rotulo || "Mercado, combustível e farmácia")+" (o que falta do teto)",
+        valor:restante/marcos.length, tipo:"saida", conta:OV.conta,
+        categoria:OV.categoria, origem:"variavel" }));
+    c = addMes(c,1);
+  }
+}
+
+(DADOS.sazonais||[]).forEach(s=>{
+  for (let ano = BASE.getFullYear(); ano <= FIM.getFullYear(); ano++){
+    const d = dataNo(ano, s.mes-1, s.dia||15);
+    if (d >= BASE && d <= FIM)
+      LANC.push({ data:d, desc:s.desc, valor:s.valor, tipo:"saida",
+                  conta:s.conta||"nubank", categoria:s.categoria||"transporte",
+                  origem:"sazonal" });
+  }
+});
+
+(DADOS.eventos_previstos||[]).forEach(e=>{
+  if(!e.data || !e.valor) return;
+  const d = parse(e.data);
+  if (d >= BASE && d <= FIM)
+    LANC.push({ data:d, desc:e.desc, valor:e.valor, tipo:e.tipo,
+                conta:e.conta||"nubank",
+                categoria: e.categoria || (e.tipo === "entrada" ? "renda" : "lazer"),
+                origem:"evento", certeza:e.certeza });
+});
+
+CARTOES = DADOS.contas.filter(c=>c.tipo==="cartao");
+FATURAS = {};
+
+CARTOES.forEach(cc=>{
+  const compras = LANC.filter(l=>l.conta===cc.id);
+  const ciclos = new Map();
+
+  if (cc.fatura_vence){
+    const venc = parse(cc.fatura_vence);
+    const mesmoMes = cc.vence_dia > cc.fecha_dia;
+    const fech = dataNo(venc.getFullYear(), venc.getMonth() - (mesmoMes?0:1), cc.fecha_dia);
+    ciclos.set(iso(fech), { fechamento:fech, vencimento:venc,
+                            itens:[], parcial: cc.fatura_aberta||0 });
+  }
+
+  compras.forEach(l=>{
+    const fech = fechamentoDe(cc,l.data);
+    const k = iso(fech);
+    if (!ciclos.has(k))
+      ciclos.set(k,{fechamento:fech, vencimento:vencimentoDe(cc,fech),
+                    itens:[], parcial:0});
+    ciclos.get(k).itens.push(l);
+  });
+
+  FATURAS[cc.id] = [...ciclos.values()]
+    .map(c=>({...c, total: c.parcial + c.itens.reduce((s,i)=>s+i.valor,0)}))
+    .filter(c=>c.total>0.004)
+    .sort((a,b)=>a.vencimento-b.vencimento);
+});
+
+CAIXA = [];
+LANC.filter(l=>conta(l.conta) && conta(l.conta).tipo==="corrente")
+    .forEach(l=>CAIXA.push({...l, kind:"direto"}));
+CARTOES.forEach(cc=>FATURAS[cc.id].forEach(f=>{
+  if (f.vencimento >= BASE)
+    CAIXA.push({ data:f.vencimento, desc:"Fatura "+cc.nome, valor:f.total,
+                 tipo:"saida", conta:cc.paga_de||"nubank", categoria:"fatura",
+                 origem:"fatura", kind:"fatura", cartao:cc.id });
+}));
+CAIXA.sort((a,b)=>a.data-b.data || (a.tipo==="entrada"?-1:1));
+
+SALDO_INICIAL = DADOS.contas.filter(c=>c.tipo==="corrente")
+                     .reduce((s,c)=>s+(c.saldo||0),0) + AJUSTE_SALDO;
+
+let acum = SALDO_INICIAL;
+CAIXA.forEach(m=>{ acum += (m.tipo==="entrada"? m.valor : -m.valor); m.saldo = acum; });
+
+PRIMEIRO_NEG = CAIXA.find(m=>m.saldo < 0) || null;
+}
+
+function cartoesDoDia(dt){
+  return DADOS.contas
+    .filter(c => c.tipo === "cartao" && c.uso_geral !== false)
+    .map(c => { const v = vencimentoDe(c, fechamentoDe(c, dt));
+                return { c, venc: v, dias: Math.round((v - dt) / 864e5) }; })
+    .sort((a, b) => b.dias - a.dias || a.venc - b.venc);
+}
+function hojeMeioDia(){ const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate(), 12, 0, 0); }
+
+function montaAlertas(){
+  const A=[];
+
+  const confs = (DADOS.conferencias||[]).slice().sort((a,b)=>a.data<b.data?-1:1);
+  const ult = confs[confs.length-1];
+  if (ult && Math.abs(ult.diferenca) >= 50){
+    const dd = parse(ult.data);
+    A.push({grave:false,
+      t: "Na conferência de "+dd.getDate()+" de "+MESES[dd.getMonth()]+" havia "+
+         brl(Math.abs(ult.diferenca))+(ult.diferenca<0?" a menos":" a mais")+
+         " do que o sistema previa",
+      c: "Real "+brl(ult.real)+", previsto "+brl(ult.previsto)+". "+
+         (ult.diferenca<0 ? "Algum gasto não chegou até o sistema."
+                          : "Alguma entrada não chegou até o sistema.")+
+         " A projeção já parte do saldo real."});
+  }
+
+  const mesBase = chaveMes(BASE);
+  const atrasadas = DADOS.recorrencias.filter(r => {
+    const d = dataNo(BASE.getFullYear(), BASE.getMonth(), r.dia);
+    if (d >= BASE) return false;
+    if (r.inicio && d < parse(r.inicio)) return false;
+    if (r.fim    && d > parse(r.fim))    return false;
+    return !confirmacaoDe(r.desc, mesBase);
+  });
+  if (atrasadas.length){
+    const dentroR = atrasadas.filter(r =>
+      dataNo(BASE.getFullYear(), BASE.getMonth(), r.dia) >= INICIO_CARENCIA);
+    const foraR = atrasadas.filter(r => !dentroR.includes(r));
+    const lista = rs => rs.map(r=>esc(r.desc)+" (dia "+r.dia+", "+brl(r.valor)+")").join(" · ");
+    if (dentroR.length) A.push({grave:false,
+      t: dentroR.length+" cobrança"+(dentroR.length>1?"s":"")+
+         " já passou da data e ainda não foi confirmada",
+      c: lista(dentroR)+". <b>Continua na projeção</b> como pendente por até "+
+         CARENCIA_DIAS+" dias depois da data. Marque Entrou ou Não veio em "+
+         "“Assinaturas e contas do mês”."});
+    if (foraR.length){
+      const soma = foraR.reduce((s,r)=>s+(r.tipo==="entrada"?0:r.valor),0);
+      A.push({grave:false,
+        t: foraR.length+" cobrança"+(foraR.length>1?"s":"")+
+           " passou da data há mais de "+CARENCIA_DIAS+" dias sem confirmação",
+        c: lista(foraR)+". Soma "+brl(soma)+" e <b>saiu da projeção</b>. Se "+
+           "foi cobrada, marque Entrou em “Assinaturas e contas do mês”."});
+    }
+  }
+
+  if (PRIMEIRO_NEG){
+    const d = PRIMEIRO_NEG.data;
+    A.push({grave:true,
+      t:"Saldo fica negativo em "+d.getDate()+" de "+MESES[d.getMonth()],
+      c:"Projeção chega a "+brl(PRIMEIRO_NEG.saldo)+" depois de “"+
+        PRIMEIRO_NEG.desc+"”. Faltam "+brl(Math.abs(PRIMEIRO_NEG.saldo))+
+        " para atravessar esse dia."});
+  }
+  CARTOES.filter(c=>c.debito_automatico && c.conta_debito).forEach(cc=>{
+    const f = FATURAS[cc.id][0]; if(!f) return;
+    const propria = conta(cc.conta_debito); if(!propria) return;
+    const falta = f.total - (propria.saldo||0);
+    if (falta <= 0) return;
+    const limite = new Date(f.vencimento.getTime() - 864e5);
+    A.push({grave:false,
+      t:"Transferir "+brl(falta)+" para o "+propria.nome+" até "+
+        limite.toLocaleDateString("pt-BR"),
+      c:"A fatura do "+cc.nome+", "+brl(f.total)+", é debitada automaticamente em "+
+        f.vencimento.toLocaleDateString("pt-BR")+", e a conta "+propria.nome+" tem "+
+        brl(propria.saldo||0)+". Sem o saldo, o débito não roda e a fatura entra no "+
+        "rotativo."});
+  });
+  const lim = new Date(BASE.getTime()+7*864e5);
+  const prox = CAIXA.filter(m=>m.tipo==="saida" && m.data>=BASE && m.data<=lim);
+  if (prox.length){
+    const tot = prox.reduce((s,m)=>s+m.valor,0);
+    A.push({grave:false, t:"Vence nos próximos 7 dias: "+brl(tot),
+      c: prox.map(m=>m.desc+" ("+m.data.getDate()+"/"+(m.data.getMonth()+1)+") "+
+         brl(m.valor)).join(" · ")});
+  }
+  return A;
+}
+
+let mesAtual = new Date(BASE.getFullYear(), BASE.getMonth(), 1, 12, 0, 0);
+
+function render(){
+  document.getElementById("asof").textContent =
+    "Dados de "+BASE.toLocaleDateString("pt-BR")+" · projeção até "+
+    MESES[FIM.getMonth()]+" de "+FIM.getFullYear();
+  const SALDO_AGORA = SALDO_INICIAL + CAIXA
+    .filter(m => iso(m.data) === iso(BASE) && (m.origem === "real" || m.confirmado))
+    .reduce((s,m) => s + (m.tipo === "entrada" ? m.valor : -m.valor), 0);
+  const sh=document.getElementById("saldo-hoje");
+  sh.textContent = brl(SALDO_AGORA);
+  sh.className = "v num";
+
+  const hj = hojeMeioDia(), cd = cartoesDoDia(hj);
+  if (cd.length){
+    let troca = null;
+    for (let k = 1; k <= 31 && !troca; k++){
+      const d = new Date(hj.getTime() + k*864e5), x = cartoesDoDia(d)[0];
+      if (x.c.id !== cd[0].c.id) troca = { d, x };
+    }
+    const fmt = d => d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
+    document.getElementById("cartao-dia").innerHTML =
+      "💳 Cartão de hoje: <b>"+esc(cd[0].c.nome)+"</b> — paga em "+fmt(cd[0].venc)+
+      " ("+cd[0].dias+" dias)"+
+      (troca ? " · a partir de "+fmt(troca.d)+": "+esc(troca.x.c.nome) : "")+
+      (troca && cd[0].venc.getMonth() === hj.getMonth() &&
+       troca.x.venc.getMonth() !== hj.getMonth()
+        ? "<br>⚠ Hoje qualquer cartão vence antes do salário do dia 30. Se a compra "+
+          "puder esperar, deixe para "+fmt(troca.d)+" — aí o pagamento vai para "+
+          fmt(troca.x.venc)+"."
+        : "");
+  }
+
+  const kb = chaveMes(BASE);
+  const doMesBase = CAIXA.filter(m=>chaveMes(m.data)===kb);
+  const fimBase = doMesBase.length ? doMesBase[doMesBase.length-1].saldo : SALDO_INICIAL;
+  document.getElementById("resumo-fim-rot").textContent = "Fim de "+MESES[BASE.getMonth()];
+  const rf = document.getElementById("resumo-fim");
+  rf.textContent = brl(fimBase); rf.className = "v num"+(fimBase<0?" neg":"");
+  const rn = document.getElementById("resumo-neg");
+  rn.textContent = PRIMEIRO_NEG
+    ? PRIMEIRO_NEG.data.toLocaleDateString("pt-BR")
+    : "não fica";
+  rn.className = "v"+(PRIMEIRO_NEG?" neg":"");
+
+  document.getElementById("alertas").innerHTML = montaAlertas().map(a=>
+    '<div class="alerta'+(a.grave?' grave':'')+'"><b>'+a.t+'</b>'+a.c+'</div>').join("");
+
+  const ag = CAIXA.filter(m=>m.tipo==="saida" && m.data>=BASE).slice(0,10);
+  const ta = document.querySelector("#agenda tbody");
+  ta.innerHTML = !ag.length
+    ? '<tr><td class="vazio">Nada a vencer no horizonte.</td></tr>'
+    : '<tr><th>Data</th><th>Conta</th><th class="r">Valor</th></tr>'+
+      ag.map(m=>{
+        const dias = Math.round((m.data - BASE)/864e5);
+        const quando = dias===0 ? "hoje" : dias===1 ? "amanhã" : "em "+dias+" dias";
+        const cc = m.cartao ? conta(m.cartao) : null;
+        const auto = cc && cc.debito_automatico;
+        const dsem = m.data.toLocaleDateString("pt-BR",{weekday:"short"}).replace(".","");
+        return '<tr'+(m.saldo<0?' class="dia-neg"':'')+'><td class="quando"><b>'+
+          m.data.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+
+          ' <span class="det">'+dsem+'</span></b><span class="det">'+quando+'</span></td><td>'+esc(m.desc)+
+          (auto?'<span class="tag">débito automático</span>':'')+
+          '</td><td class="r"><span class="num">'+brl(m.valor)+'</span>'+
+          '<div class="det num'+(m.saldo<0?" neg":"")+'" title="saldo depois desta conta">fica '+
+          brl(m.saldo)+'</div></td></tr>';
+      }).join("");
+
+  const nomeMes = MESES[mesAtual.getMonth()];
+  document.getElementById("mes-rot").textContent =
+    nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1)+" de "+mesAtual.getFullYear();
+
+  const k = chaveMes(mesAtual);
+  const doMes = CAIXA.filter(m=>chaveMes(m.data)===k);
+  const ent = doMes.filter(m=>m.tipo==="entrada").reduce((s,m)=>s+m.valor,0);
+  const sai = doMes.filter(m=>m.tipo==="saida").reduce((s,m)=>s+m.valor,0);
+  const fim = doMes.length ? doMes[doMes.length-1].saldo
+            : (CAIXA.filter(m=>m.data<mesAtual).pop()?.saldo ?? SALDO_INICIAL);
+
+  const kpis = [
+    ["Entradas", ent, "pos"], ["Saídas", -sai, "neg"],
+    ["Resultado do mês", ent-sai, ent-sai<0?"neg":"pos"],
+    ["Saldo no fim do mês", fim, fim<0?"neg":""]
+  ].map(([r,v,cl])=>'<div class="kpi"><div class="rot">'+r+
+     '</div><div class="val num '+(cl||"")+'">'+brl(v)+'</div></div>');
+
+  document.getElementById("kpis").innerHTML = kpis.join("");
+
+  const te = document.getElementById("teto");
+  if (OV && OV.valor_mensal > 0){
+    const usado = GASTO_VAR[k] || 0;
+    const pct = Math.min(100, usado / OV.valor_mensal * 100);
+    te.hidden = false;
+    te.innerHTML = '<span>Mercado, combustível e farmácia</span>'+
+      '<div class="barra'+(usado>OV.valor_mensal?" estourou":"")+'"><i style="width:'+
+      pct.toFixed(0)+'%"></i></div><span class="num"><b>'+brl(usado)+'</b> de '+
+      brl(OV.valor_mensal)+'</span>';
+  } else te.hidden = true;
+
+  renderConfirma();
+
+  const tb=document.querySelector("#tl tbody"); tb.innerHTML="";
+  if(!doMes.length){
+    tb.innerHTML='<tr><td class="vazio">Nada previsto neste mês.</td></tr>';
+  } else {
+    let diaAtual=null;
+    doMes.forEach(m=>{
+      const dk=iso(m.data);
+      if(dk!==diaAtual){
+        diaAtual=dk;
+        const doDia = doMes.filter(x=>iso(x.data)===dk);
+        const saldoDia = doDia[doDia.length-1].saldo;
+        const tr=tb.insertRow(); tr.className="dia-h"+(saldoDia<0?" dia-neg":"");
+        tr.innerHTML='<td colspan="2"><b>'+m.data.getDate()+" de "+
+          MESES[m.data.getMonth()]+'</b></td><td class="r num '+
+          (saldoDia<0?"neg":"")+'">'+brl(saldoDia)+'</td>';
+      }
+      const tr=tb.insertRow();
+      const tagTxt = m.kind==="fatura" ? "fatura"
+                   : (m.origem==="parcela" ? "parcela"
+                   : (m.origem==="real" ? "confirmado"
+                   : (m.origem==="variavel" ? "previsão"
+                   : (m.origem==="sazonal" ? "anual"
+                   : (m.origem==="evento" ? "previsto" : "")))));
+      tr.innerHTML='<td>'+m.desc+(tagTxt?'<span class="tag">'+tagTxt+'</span>':'')+
+        '</td><td class="det opcional">'+(cat(m.categoria)?.nome||"")+
+        '</td><td class="r num '+(m.tipo==="entrada"?"pos":"")+'">'+
+        (m.tipo==="entrada"?"+":"−")+brl(m.valor).replace("R$ ","")+'</td>';
+    });
+  }
+
+  const CLASSES={A:"Essencial",B:"Importante",C:"Reduzível",D:"Cortável"};
+  const porCat={};
+  LANC.filter(l=>l.tipo!=="entrada" && chaveMes(l.data)===k && l.categoria!=="reembolso")
+      .forEach(l=>{ porCat[l.categoria]=(porCat[l.categoria]||0)+l.valor; });
+  const linhasCat=Object.entries(porCat).sort((a,b)=>b[1]-a[1]);
+  const totCat=linhasCat.reduce((s,[,v])=>s+v,0);
+  const porClasse={};
+  linhasCat.forEach(([id,v])=>{ const c=cat(id)?.classe||"—";
+                                porClasse[c]=(porClasse[c]||0)+v; });
+
+  const tcat=document.querySelector("#cat tbody");
+  tcat.innerHTML = !linhasCat.length
+    ? '<tr><td class="vazio">Nada gasto neste mês.</td></tr>'
+    : '<tr><th>Categoria</th><th class="opcional">Classe</th><th class="r">No mês</th></tr>'+
+      linhasCat.map(([id,v])=>{
+        const c=cat(id); const pct=totCat? v/totCat*100 : 0;
+        return '<tr><td>'+(c?.nome||id)+
+          '<div class="barra" style="max-width:220px"><i style="width:'+
+          pct.toFixed(0)+'%"></i></div></td><td class="det opcional">'+
+          (CLASSES[c?.classe]||"—")+'</td><td class="r num">'+brl(v)+'</td></tr>';
+      }).join("")+
+      '<tr class="total"><td><b>Total</b><div class="det">'+
+        ["A","B","C","D"].filter(c=>porClasse[c])
+          .map(c=>CLASSES[c]+" "+brl(porClasse[c])).join(" · ")+
+      '</div></td><td class="opcional"></td><td class="r num"><b>'+brl(totCat)+
+      '</b></td></tr>';
+
+  const tc=document.querySelector("#cartoes tbody");
+  tc.innerHTML = '<tr><th>Cartão</th><th class="r">Próxima fatura</th></tr>'+
+    CARTOES.map(cc=>{
+      const f=FATURAS[cc.id][0];
+      const liv = cc.disponivel!=null ? " · livre "+brl(cc.disponivel) : "";
+      return '<tr><td><b>'+esc(cc.nome)+'</b><div class="det">fecha '+cc.fecha_dia+
+        ' · vence '+cc.vence_dia+(cc.debito_automatico?' · débito automático':'')+
+        '</div></td><td class="r">'+(f? '<span class="num"><b>'+brl(f.total)+'</b></span>'+
+        '<div class="det num">vence '+f.vencimento.toLocaleDateString("pt-BR",
+          {day:"2-digit",month:"2-digit"})+liv+'</div>' : '—')+'</td></tr>';
+    }).join("");
+
+  const td=document.querySelector("#dividas tbody");
+  const tot=DADOS.dividas.reduce((s,d)=>s+d.saldo_estimado,0);
+  td.innerHTML='<tr><th>Credor</th><th class="r">Saldo</th></tr>'+
+    DADOS.dividas.map(d=>'<tr><td>'+esc(d.credor)+'<div class="det">'+
+      [d.parcela? brl(d.parcela)+'/mês' : null,
+       d.fim? 'até '+parse(d.fim).toLocaleDateString("pt-BR",{month:"short",year:"numeric"}).replace(". de"," de") : null]
+       .filter(Boolean).join(' · ')+'</div></td><td class="r num">'+brl(d.saldo_estimado)+
+      '</td></tr>').join("")+
+    '<tr class="total"><td>Total</td><td class="r num">'+brl(tot)+'</td></tr>';
+
+  document.getElementById("rodape").innerHTML =
+    "Dados de "+BASE.toLocaleDateString("pt-BR")+". O que não está marcado como "+
+    "confirmado é previsão. A linha <i>previsão</i> é a reserva de "+
+    brl(OV?OV.valor_mensal:0)+"/mês para mercado, combustível e farmácia, que vai sendo "+
+    "trocada pelo gasto real. "+
+    (DADOS.pendencias?.length? DADOS.pendencias.length+" pendências de dados em aberto.":"")+
+    (()=>{ const cs=(DADOS.conferencias||[]).slice().sort((a,b)=>a.data<b.data?-1:1);
+           const u=cs[cs.length-1]; if(!u) return " Saldo ainda nunca conferido com o real.";
+           return " Última conferência de saldo: "+parse(u.data).toLocaleDateString("pt-BR")+
+                  " (real "+brl(u.real)+", previsto "+brl(u.previsto)+")."; })();
+}
+
+const MEXIDAS = new Set();
+
+let BANCO = null;          // coleção "confirmacoes", quando disponível
+let COL_GASTOS = null;     // coleção "gastos_app", quando disponível
+let SYNC_ERRO = "";
+
+const idConf = (desc, mes) => mes + "_" + desc.normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-")
+  .replace(/^-|-$/g, "").slice(0, 150);
+
+async function ligaBanco(){
+  try{
+    if (!window.claude || !window.claude.use) return;
+    const db = await window.claude.use("db");
+    if (!db) return;
+    const col = db.collection("confirmacoes");
+    col.onSnapshot(snap => {
+      DADOS.confirmacoes = snap.docs.map(d => {
+        const x = {...d.data()}; delete x.gravado_em; return x;
+      });
+      BANCO = col; SYNC_ERRO = ""; MEXIDAS.clear();
+      calcula(); render();
+    }, e => { BANCO = null; SYNC_ERRO = e.code || "erro"; render(); });
+    const colG = db.collection("gastos_app");
+    colG.onSnapshot(snap => {
+      GASTOS_APP = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      COL_GASTOS = colG; calcula(); render(); renderLancar();
+    }, e => { COL_GASTOS = null; renderLancar(); });
+  }catch(e){ BANCO = null; }
+}
+
+async function gravaNoBanco(desc, mes, conf){
+  const ref = BANCO.doc(idConf(desc, mes));
+  try{
+    if (conf === null) await ref.delete();
+    else await ref.set({...conf, gravado_em: new Date().toISOString()});
+  }catch(e){
+    SYNC_ERRO = e.code || "erro";
+    MEXIDAS.add(desc+"|"+mes);
+    render();
+  }
+}
+
+function gravaConfirmacao(desc, mes, patch){
+  DADOS.confirmacoes = DADOS.confirmacoes || [];
+  const i = DADOS.confirmacoes.findIndex(c => c.desc === desc &&
+                                              c.competencia === mes);
+  if (patch === null){ if (i >= 0) DADOS.confirmacoes.splice(i,1); }
+  else if (i >= 0)   { Object.assign(DADOS.confirmacoes[i], patch); }
+  else               { DADOS.confirmacoes.push({desc, competencia:mes, ...patch}); }
+  if (BANCO){
+    const atual = patch === null ? null
+      : DADOS.confirmacoes.find(c => c.desc === desc && c.competencia === mes);
+    gravaNoBanco(desc, mes, atual ? {...atual} : null);
+  } else {
+    MEXIDAS.add(desc+"|"+mes);
+  }
+  calcula();
+  render();
+}
+
+function previstoNoMes(r, mes){
+  const [a,m] = mes.split("-").map(Number);
+  const d = dataNo(a, m-1, r.dia);
+  if (r.inicio && d < parse(r.inicio)) return null;
+  if (r.fim    && d > parse(r.fim))    return null;
+  return { data:d, conta:r.conta, valor:r.valor };
+}
+
+function renderConfirma(){
+  const mes = chaveMes(mesAtual);
+  const tb  = document.querySelector("#confirma tbody");
+  const nb  = document.getElementById("naosalvo");
+
+  document.getElementById("sync").textContent = BANCO
+    ? "Sincronizado: cada clique é salvo na hora, no celular e no computador."
+    : SYNC_ERRO
+      ? "A sincronização parou ("+SYNC_ERRO+"). O que você marcar agora fica só nesta aba."
+      : "Sem sincronização nesta abertura: o que você marcar fica só nesta aba.";
+
+  const n = MEXIDAS.size;
+  nb.hidden = n === 0;
+  if (n){
+    nb.innerHTML = "<b>"+(n === 1 ? "1 confirmação ainda não salva"
+                                  : n+" confirmações ainda não salvas")+
+      "</b>Elas só existem nesta aba. Clique em <b>Baixar dados</b> e me mande o "+
+      "arquivo, senão somem quando você fechar a página.";
+  }
+
+  if (mesAtual < new Date(BASE.getFullYear(), BASE.getMonth(), 1, 12, 0, 0)){
+    tb.innerHTML = '<tr><td class="vazio">Mês já encerrado — a projeção começa em '+
+                   BASE.toLocaleDateString("pt-BR")+'.</td></tr>';
+    return;
+  }
+
+  const linhas = DADOS.recorrencias
+    .map(r => ({ r, p: previstoNoMes(r, mes) }))
+    .filter(x => x.p)
+    .sort((x,y) => x.p.data - y.p.data);
+
+  if (!linhas.length){
+    tb.innerHTML = '<tr><td class="vazio">Nada recorrente neste mês.</td></tr>';
+    return;
+  }
+
+  const opcoes = sel => DADOS.contas.map(c =>
+    '<option value="'+c.id+'"'+(c.id===sel?' selected':'')+'>'+
+    esc(c.nome)+'</option>').join("");
+
+  tb.innerHTML =
+    '<tr><th>Cobrança</th><th class="r">Valor</th></tr>' +
+    linhas.map(({r,p}) => {
+      const cf  = confirmacaoDe(r.desc, mes);
+      const est = cf ? cf.estado : "previsto";
+      const cls = est === "confirmado" ? "conf-ok"
+                : est === "cancelado"  ? "conf-nao" : "";
+      const val = (cf && cf.valor != null) ? cf.valor : p.valor;
+      const cta = (cf && cf.conta) ? cf.conta : p.conta;
+      const dta = (cf && cf.data)  ? cf.data  : iso(p.data);
+
+      const botao = (rot, acao, ligado) =>
+        '<button data-desc="'+esc(r.desc)+'" data-acao="'+acao+'"'+
+        (ligado ? ' aria-pressed="true"' : '')+'>'+rot+'</button>';
+
+      const edicao = est !== "confirmado" ? "" :
+        '<div class="edit">'+
+          '<input type="date" data-desc="'+esc(r.desc)+'" data-campo="data" value="'+dta+'">'+
+          '<select data-desc="'+esc(r.desc)+'" data-campo="conta">'+
+            opcoes(cta)+
+          '</select>'+
+          '<input type="number" step="0.01" data-desc="'+esc(r.desc)+
+            '" data-campo="valor" value="'+val.toFixed(2)+'">'+
+        '</div>';
+
+      return '<tr class="'+cls+'"><td>'+
+          '<b>'+esc(r.desc)+'</b>'+
+          '<div class="det">previsto dia '+p.data.getDate()+' em '+
+             esc(conta(p.conta)?.nome || p.conta)+
+             (r.tipo === "entrada" ? ' · entrada' : '')+'</div>'+
+          '<div class="estados">'+
+            botao("Entrou","confirmado", est==="confirmado")+
+            botao("Ainda não","previsto", est==="previsto")+
+            botao("Não veio","cancelado", est==="cancelado")+
+          '</div>'+ edicao +
+        '</td><td class="r num'+(est==="cancelado"?'':'')+'">'+brl(val)+'</td></tr>';
+    }).join("");
+
+  tb.querySelectorAll("button[data-acao]").forEach(b => b.onclick = () => {
+    const desc = b.dataset.desc, acao = b.dataset.acao;
+    if (acao === "previsto")  return gravaConfirmacao(desc, mes, null);
+    if (acao === "cancelado") return gravaConfirmacao(desc, mes, {estado:"cancelado"});
+    const x = linhas.find(l => l.r.desc === desc);
+    gravaConfirmacao(desc, mes, { estado:"confirmado", data:iso(x.p.data),
+                                  conta:x.p.conta, valor:x.p.valor });
+  });
+
+  tb.querySelectorAll("[data-campo]").forEach(el => el.onchange = () => {
+    const v = el.dataset.campo === "valor" ? parseFloat(el.value) : el.value;
+    if (el.dataset.campo === "valor" && !isFinite(v)) return;
+    gravaConfirmacao(el.dataset.desc, mes, {[el.dataset.campo]: v});
+  });
+}
+
+const hojeISO = () => iso(new Date());
+function renderLancar(){
+  const sel = document.getElementById("g-conta");
+  if (!sel.options.length){
+    sel.innerHTML = DADOS.contas.map(c =>
+      '<option value="'+c.id+'">'+esc(c.nome)+'</option>').join("");
+    sel.value = DADOS.contas.some(c => c.id === "cc_nubank") ? "cc_nubank" : DADOS.contas[0].id;
+    document.getElementById("g-cat").innerHTML = DADOS.categorias
+      .filter(c => c.id !== "renda")
+      .map(c => '<option value="'+c.id+'">'+esc(c.nome)+'</option>').join("");
+    document.getElementById("g-cat").value = "mercado";
+    document.getElementById("g-data").value = hojeISO();
+  }
+  const ehCartao = conta(sel.value)?.tipo === "cartao";
+  document.getElementById("g-parc-rot").hidden = !ehCartao;
+  if (!ehCartao) document.getElementById("g-parc").value = 1;
+
+  const msg = document.getElementById("g-msg");
+  if (!COL_GASTOS && !msg.dataset.fixo)
+    msg.textContent = "Lançar só funciona na página publicada no claude.ai.";
+
+  const pend = GASTOS_APP.slice().sort((a,b) => (a.criado_em < b.criado_em ? 1 : -1));
+  document.getElementById("g-pendentes").innerHTML = !pend.length ? "" :
+    '<table><tbody><tr><th>Lançado no app, ainda não sincronizado</th><th class="r">Valor</th><th></th></tr>'+
+    pend.map(g => '<tr><td>'+esc(g.desc)+'<div class="det">'+
+      parse(g.data).toLocaleDateString("pt-BR")+' · '+esc(conta(g.conta)?.nome || g.conta)+
+      (g.parcelas > 1 ? ' · '+g.parcelas+'x' : '')+'</div></td><td class="r num'+
+      (g.tipo === "entrada" ? ' pos' : '')+'">'+(g.tipo === "entrada" ? "+" : "")+brl(g.valor)+
+      '</td><td class="r"><button type="button" data-apaga="'+esc(g.id)+'">Apagar</button></td></tr>').join("")+
+    '</tbody></table>';
+  document.querySelectorAll("[data-apaga]").forEach(b => b.onclick = async () => {
+    if (!COL_GASTOS) return;
+    b.disabled = true;
+    try { await COL_GASTOS.doc(b.dataset.apaga).delete(); }
+    catch(e){ b.disabled = false; msg.textContent = "Não consegui apagar ("+(e.code||"erro")+")."; }
+  });
+}
+
+document.getElementById("abre-lancar").onclick = () => {
+  const p = document.getElementById("lancar"), b = document.getElementById("abre-lancar");
+  p.hidden = !p.hidden; b.setAttribute("aria-expanded", String(!p.hidden));
+  renderLancar();
+  if (!p.hidden) document.getElementById("g-valor").focus();
+};
+document.getElementById("fecha-lancar").onclick = () => {
+  document.getElementById("lancar").hidden = true;
+  document.getElementById("abre-lancar").setAttribute("aria-expanded","false");
+};
+document.getElementById("g-conta").onchange = renderLancar;
+document.getElementById("form-lancar").onsubmit = async ev => {
+  ev.preventDefault();
+  const msg = document.getElementById("g-msg"); msg.dataset.fixo = "1";
+  if (!COL_GASTOS){ msg.textContent = "Lançar só funciona na página publicada no claude.ai."; return; }
+  const valor = Math.round(parseFloat(document.getElementById("g-valor").value) * 100) / 100;
+  const desc = document.getElementById("g-desc").value.trim();
+  const data = document.getElementById("g-data").value;
+  const parcelas = Math.max(1, Math.min(24, parseInt(document.getElementById("g-parc").value, 10) || 1));
+  if (!(valor > 0) || !desc || !data){ msg.textContent = "Preencha valor, descrição e data."; return; }
+  const entrada = document.getElementById("g-entrada").checked;
+  const gasto = { data, desc, valor, conta:document.getElementById("g-conta").value,
+    categoria: entrada ? "renda" : document.getElementById("g-cat").value,
+    tipo: entrada ? "entrada" : "saida", parcelas: entrada ? 1 : parcelas,
+    criado_em: new Date().toISOString() };
+  const btn = ev.submitter; if (btn) btn.disabled = true;
+  try{
+    await COL_GASTOS.add(gasto);
+    msg.textContent = "Lançado: "+brl(valor)+" — "+desc+
+      (gasto.parcelas > 1 ? " em "+gasto.parcelas+"x" : "")+". Já está na conta.";
+    document.getElementById("g-valor").value = ""; document.getElementById("g-desc").value = "";
+    document.getElementById("g-parc").value = 1; document.getElementById("g-entrada").checked = false;
+  }catch(e){
+    msg.textContent = "Não gravou ("+(e.code||"erro")+"). Tente de novo ou me mande no chat.";
+  }finally{ if (btn) btn.disabled = false; }
+};
+
+addEventListener("beforeunload", e => {
+  if (MEXIDAS.size){ e.preventDefault(); e.returnValue = ""; }
+});
+
+document.getElementById("baixar").onclick = async ()=>{
+  const txt = JSON.stringify(DADOS, null, 2);
+  const nome = "dados-"+iso(new Date())+".json";
+  try{
+    const dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
+    if (dl){
+      await dl.save({filename:nome, data:txt});
+      MEXIDAS.clear(); render();
+      return;
+    }
+  }catch(e){ return; }
+  try{
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([txt], {type:"application/json"}));
+    a.download = nome;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    MEXIDAS.clear(); render();
+  }catch(e){
+    console.error("Não consegui gerar o arquivo neste navegador.", e);
+  }
+};
+
+document.getElementById("ant").onclick = ()=>{mesAtual=addMes(mesAtual,-1);render()};
+document.getElementById("prox").onclick= ()=>{mesAtual=addMes(mesAtual, 1);render()};
+document.getElementById("hoje-btn").onclick=()=>{
+  mesAtual=new Date(BASE.getFullYear(),BASE.getMonth(),1,12,0,0);render()};
+calcula();
+render();
+ligaBanco();
+</script>
+</body>
+</html>
