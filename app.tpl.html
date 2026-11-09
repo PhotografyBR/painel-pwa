@@ -95,6 +95,7 @@
   .kpi .val{font-size:18px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
   #teto{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:12.5px;color:var(--fraco)}
   #teto[hidden]{display:none}
+  .fig[hidden]{display:none}
   #teto .barra{flex:1;margin:0}
   .barra{height:5px;background:var(--linha2);border-radius:3px;overflow:hidden}
   .barra i{display:block;height:100%;background:var(--acento);border-radius:3px}
@@ -178,8 +179,10 @@
       <div class="sub" id="asof"></div>
     </div>
     <div class="resumo">
-      <div class="fig principal"><div class="rot">Saldo nas contas hoje</div>
+      <div class="fig principal"><div class="rot" id="saldo-rot">Saldo nas contas hoje</div>
         <div class="v num" id="saldo-hoje"></div></div>
+      <div class="fig" id="fig-previsto" hidden><div class="rot" id="previsto-rot"></div>
+        <div class="v num" id="previsto-hoje"></div></div>
       <div class="fig"><div class="rot" id="resumo-fim-rot">Fim do mês</div>
         <div class="v num" id="resumo-fim"></div></div>
       <div class="fig"><div class="rot">Fica negativo em</div>
@@ -646,6 +649,21 @@ function render(){
           "puder esperar, deixe para "+fmt(troca.d)+" — aí o pagamento vai para "+
           fmt(troca.x.venc)+"."
         : "");
+  }
+
+  const dm = d => d.toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"});
+  const atrasado = hj > BASE;
+  document.getElementById("saldo-rot").textContent =
+    atrasado ? "Saldo em "+dm(BASE) : "Saldo nas contas hoje";
+  const figp = document.getElementById("fig-previsto");
+  figp.hidden = !atrasado;
+  if (atrasado){
+    const prev = SALDO_INICIAL + CAIXA.filter(m => m.data <= hj)
+      .reduce((s,m) => s + (m.tipo === "entrada" ? m.valor : -m.valor), 0);
+    document.getElementById("previsto-rot").textContent = "Previsto hoje, "+dm(hj);
+    const pv = document.getElementById("previsto-hoje");
+    pv.textContent = brl(prev);
+    pv.className = "v num"+(prev < 0 ? " neg" : "");
   }
 
   const kb = chaveMes(BASE);
