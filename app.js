@@ -13,7 +13,7 @@
   const CAMINHO = "cofre/dados.json.enc";
   const URL_COFRE = "https://api.github.com/repos/" + REPO + "/contents/" + CAMINHO;
   const CHAVE_LS = "fr_chave", TOKEN_LS = "fr_token", CACHE_COFRE = "fr-cofre";
-  const FILA_LS = "fr_fila";
+  const FILA_LS = "fr_fila", CONF_LS = "fr_conf";
   const RECARGA_MIN = 15;          // volta ao primeiro plano depois disso: recarrega
   const $ = id => document.getElementById(id);
   const carregadoEm = Date.now();
@@ -73,7 +73,8 @@
     if (offline) txt += " · sem conexão com o GitHub: cópia guardada" +
       (copiaDe ? " de " + new Date(copiaDe).toLocaleString("pt-BR",
         { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "");
-    const naFila = FILA.filter(g => !g.enviado_em).length;
+    const naFila = FILA.filter(g => !g.enviado_em).length +
+                   CONFS.filter(c => !c.enviado_em).length;
     if (naFila) txt += " · " + naFila + (naFila > 1 ? " na fila" : " na fila");
     BARRA.span.textContent = txt;
     BARRA.el.className = (dias >= 2 || offline || naFila) ? "velho" : "";
@@ -88,7 +89,7 @@
     const bt2 = document.createElement("button"); bt2.textContent = "Sair";
     bt2.title = "Esquece a chave e o token neste aparelho";
     bt2.onclick = async () => {
-      if (FILA.length && !confirm("Há lançamentos na fila que ainda não foram para o "
+      if ((FILA.length || CONFS.length) && !confirm("Há lançamentos na fila que ainda não foram para o "
           + "Claude. Sair apaga a chave, mas a fila continua guardada neste aparelho. "
           + "Quer sair mesmo assim?")) return;
       ls.del(CHAVE_LS); ls.del(TOKEN_LS);
@@ -102,9 +103,11 @@
   }
 
   const CSS_EXTRA = `
-    /* "Baixar dados" gravaria o cofre ABERTO no aparelho, fora do app; e a
-       confirmacao de assinatura so gravaria nesta aba. Ficam de fora. */
+    /* "Baixar dados" gravaria o cofre ABERTO no aparelho, fora do app. Fica de
+       fora. A confirmacao de conta entra pela fila (CONFS), entao o aviso de
+       "nao salvo, baixe os dados" do app nao vale aqui. */
     #baixar{display:none!important}
+    #naosalvo{display:none!important}
     #fila-cx{margin-top:12px;border-top:1px solid var(--linha);padding-top:12px}
     #fila-cx .linha{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
     #fila-cx .aviso{margin-top:10px;padding:8px 10px;border-radius:8px;
@@ -153,9 +156,46 @@
       .concat(g.parcelas > 1 ? [g.parcelas + "x"] : [])
       .concat(g.tipo === "entrada" ? ["entrada"] : []).join(";");
   }
-  function blocoDaFila(itens) {
-    return "Gastos lançados no celular (" + itens.length + "):\n" +
-      itens.map(linhaGasto).join("\n");
+  // uma linha do --conf: AAAA-MM;desc;estado[;data;valor;conta]
+  function linhaConf(c) {
+    const x = c.conf;
+    if (!x || x.estado !== "confirmado")
+      return [c.competencia, c.desc, x ? x.estado : "previsto"].join(";");
+    return [c.competencia, c.desc, "confirmado", x.data,
+            Number(x.valor).toFixed(2).replace(".", ","), x.conta].join(";");
+  }
+  function blocoDaFila(itens, confs) {
+    const partes = [];
+    if (itens.length) partes.push("Gastos lançados no celular (" + itens.length + "):\n" +
+      itens.map(linhaGasto).join("\n"));
+    if (confs.length) partes.push("Contas marcadas no celular (" + confs.length + "):\n" +
+      confs.map(linhaConf).join("\n"));
+    return partes.join("\n\n");
+  }
+
+  /* ================= contas marcadas (Etapa 3) =================
+     A lista "Assinaturas e contas do mes" do app (Entrou / Ainda nao / Nao veio)
+     gravava so no banco do claude.ai. Aqui cada clique vira um item de CONFS:
+     guardado no aparelho, reaplicado sobre o cofre a cada abertura e enviado no
+     mesmo bloco dos gastos. Um item por conta por mes: o ultimo clique vale. */
+  let CONFS = [];
+  function leConfs() {
+    try { CONFS = JSON.parse(ls.get(CONF_LS) || "[]"); } catch (e) { CONFS = []; }
+    if (!Array.isArray(CONFS)) CONFS = [];
+  }
+  function salvaConfs() {
+    try { localStorage.setItem(CONF_LS, JSON.stringify(CONFS)); return true; }
+    catch (e) { return false; }
+  }
+  // poe o que esta na fila por cima do que veio do cofre
+  function reaplicaConfs() {
+    DADOS.confirmacoes = DADOS.confirmacoes || [];
+    CONFS.forEach(c => {
+      const i = DADOS.confirmacoes.findIndex(x => x.desc === c.desc &&
+                                                  x.competencia === c.competencia);
+      if (i >= 0) DADOS.confirmacoes.splice(i, 1);
+      if (c.conf) DADOS.confirmacoes.push({ ...c.conf });
+    });
   }
 
   function aplicaFila() {
@@ -173,7 +213,7 @@
   function renderFila() {
     const cx = $("g-pendentes");
     cx.innerHTML = "";
-    if (!FILA.length) return;
+    if (!FILA.length && !CONFS.length) return;
     cx.id = "g-pendentes";
     const div = document.createElement("div");
     div.id = "fila-cx";
@@ -182,7 +222,7 @@
     const tb = document.createElement("tbody");
     const cab = tb.insertRow();
     // o titulo nao pode dizer "na fila" quando ja foi tudo enviado
-    const titulo = FILA.some(g => !g.enviado_em)
+    const titulo = (FILA.some(g => !g.enviado_em) || CONFS.some(c => !c.enviado_em))
       ? "Lançado no celular, ainda não enviado" : "Enviado, esperando o Claude lançar";
     [titulo, "Valor", ""].forEach((t, i) => {
       const th = document.createElement("th");
@@ -214,24 +254,54 @@
       };
       c3.appendChild(bap);
     });
+    CONFS.forEach(c => {
+      const tr = tb.insertRow();
+      if (c.enviado_em) tr.className = "enviado";
+      const x = c.conf;
+      const c1 = tr.insertCell();
+      c1.appendChild(document.createTextNode(c.desc));
+      const det = document.createElement("div");
+      det.className = "det";
+      const cc = x && x.conta && typeof conta === "function" ? conta(x.conta) : null;
+      det.textContent = (!x ? "voltou para previsto"
+        : x.estado === "cancelado" ? "não veio este mês"
+        : "paga " + dataBR(x.data) + " · " + ((cc && cc.nome) || x.conta)) +
+        (c.enviado_em ? " · enviado" : "");
+      c1.appendChild(det);
+      const c2 = tr.insertCell();
+      c2.className = "r num";
+      c2.textContent = x && x.estado === "confirmado" ? vlr(Number(x.valor)) : "—";
+      const c3 = tr.insertCell(); c3.className = "r";
+      const bap = document.createElement("button");
+      bap.type = "button"; bap.textContent = "Apagar";
+      bap.onclick = () => {
+        if (!confirm("Desfazer a marcação de \"" + c.desc + "\"? Volta ao que está no cofre.")) return;
+        CONFS = CONFS.filter(y => y !== c);
+        salvaConfs(); location.reload();     // volta ao cofre puro, sem a marcacao
+      };
+      c3.appendChild(bap);
+    });
     tab.appendChild(tb); div.appendChild(tab);
 
     const naFila = FILA.filter(g => !g.enviado_em);
     const enviados = FILA.filter(g => g.enviado_em);
+    const confNa = CONFS.filter(c => !c.enviado_em);
+    const confEnv = CONFS.filter(c => c.enviado_em);
     const linha = document.createElement("div"); linha.className = "linha";
 
-    if (naFila.length) {
+    if (naFila.length || confNa.length) {
       const bc = document.createElement("button");
       bc.type = "button"; bc.className = "primario";
       bc.id = "fila-copiar";
-      bc.textContent = "Copiar para o Claude (" + naFila.length + ")";
+      bc.textContent = "Copiar para o Claude (" + (naFila.length + confNa.length) + ")";
       bc.onclick = async () => {
-        const texto = blocoDaFila(naFila);
+        const texto = blocoDaFila(naFila, confNa);
         let copiou = false;
         try { await navigator.clipboard.writeText(texto); copiou = true; } catch (e) {}
         const agora = new Date().toISOString();
         naFila.forEach(g => { g.enviado_em = agora; });
-        const gravou = salvaFila();
+        confNa.forEach(c => { c.enviado_em = agora; });
+        const gravou = salvaFila() && salvaConfs();
         aplicaFila();
         const ta = $("fila-texto");
         if (ta) {
@@ -247,14 +317,15 @@
       };
       linha.appendChild(bc);
     }
-    if (enviados.length) {
+    if (enviados.length || confEnv.length) {
       const be = document.createElement("button");
       be.type = "button"; be.id = "fila-entraram";
-      be.textContent = "Já entraram (" + enviados.length + ")";
+      be.textContent = "Já entraram (" + (enviados.length + confEnv.length) + ")";
       be.title = "Tire da conta depois que o Claude confirmar que lançou";
       be.onclick = () => {
         FILA = FILA.filter(g => !g.enviado_em);
-        salvaFila(); aplicaFila();
+        CONFS = CONFS.filter(c => !c.enviado_em);
+        salvaFila(); salvaConfs(); aplicaFila();
       };
       linha.appendChild(be);
     }
@@ -279,7 +350,7 @@
       div.appendChild(a);
     }
     const base = (typeof DADOS === "object" && DADOS.atualizado_em) || "";
-    const jaNoCofre = enviados.filter(g => base > g.enviado_em.slice(0, 10));
+    const jaNoCofre = enviados.concat(confEnv).filter(g => base > g.enviado_em.slice(0, 10));
     if (jaNoCofre.length) {
       const a = document.createElement("div"); a.className = "aviso"; a.id = "fila-dobrada";
       a.textContent = "O cofre já é de " + dataBR(base) + ", depois do envio destes " +
@@ -302,7 +373,10 @@
       ["renderLancar", () => typeof renderLancar],
       ["conta", () => typeof conta],
       ["DADOS", () => typeof DADOS],
-      ["GASTOS_APP", () => { GASTOS_APP; return "ok"; }]
+      ["GASTOS_APP", () => { GASTOS_APP; return "ok"; }],
+      ["gravaConfirmacao", () => typeof gravaConfirmacao],
+      ["renderConfirma", () => typeof renderConfirma],
+      ["MEXIDAS", () => { MEXIDAS; return "ok"; }]
     ];
     const falta = precisa.filter(([, f]) => {
       try { return f() === "undefined"; } catch (e) { return true; }
@@ -310,6 +384,30 @@
     if (falta.length) throw new Error("o motor mudou de nome: " + falta.join(", "));
 
     leFila();
+    leConfs();
+    reaplicaConfs();
+
+    // cada clique na lista de contas do mes vai para a fila do aparelho
+    const gravaOriginal = gravaConfirmacao;
+    gravaConfirmacao = function (desc, mes, patch) {
+      gravaOriginal(desc, mes, patch);
+      MEXIDAS.clear();
+      const atual = (DADOS.confirmacoes || []).find(c => c.desc === desc &&
+                                                         c.competencia === mes);
+      CONFS = CONFS.filter(c => !(c.desc === desc && c.competencia === mes));
+      CONFS.push({ desc, competencia: mes, conf: atual ? { ...atual } : null,
+                   criado_em: new Date().toISOString(), enviado_em: null });
+      if (!salvaConfs()) alert("Não consegui guardar neste aparelho. Copie para o Claude agora.");
+      renderLancar();
+      if (BARRA) textoBarra();
+    };
+    const confirmaOriginal = renderConfirma;
+    renderConfirma = function () {
+      confirmaOriginal();
+      const s = $("sync");
+      if (s) s.textContent = "No celular: o que você marcar entra na conta na hora e vai " +
+        "para a fila. Mande para o Claude pelo botão Copiar, lá embaixo em Lançar.";
+    };
 
     // a versao do app fala com o banco do claude.ai, que nao existe aqui
     renderLancar = function () {
@@ -387,11 +485,6 @@
     st.textContent = estilo + CSS_EXTRA;
     document.head.appendChild(st);
     document.body.append(...doc.body.childNodes);
-
-    // a secao de confirmar assinatura grava so na aba (sem banco): fica fora do
-    // modo leitura, para nao prometer o que o celular nao faz
-    const conf = $("confirma");
-    if (conf && conf.closest(".sub-bloco")) conf.closest(".sub-bloco").style.display = "none";
 
     const dados = JSON.parse(texto);
     const s = document.createElement("script");
