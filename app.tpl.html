@@ -69,6 +69,9 @@
   .fig.sigilo.aberto .v{filter:none;user-select:auto;-webkit-user-select:auto}
   .fig.sigilo .rot::after{content:" · toque para ver";text-transform:none;letter-spacing:0;font-weight:400;opacity:.8}
   .fig.sigilo.aberto .rot::after{content:" · toque para esconder"}
+  
+  .sg{filter:blur(7px);cursor:pointer;user-select:none;-webkit-user-select:none;transition:filter .15s;padding:0 2px}
+  .sg.aberto{filter:none;user-select:auto;-webkit-user-select:auto}
 
   #alertas{display:grid;gap:8px}
   #alertas:empty{display:none}
@@ -1310,7 +1313,7 @@ function pintaBotoes(){
 
     const prox = CAIXA.find(m => m.tipo==="saida" && m.data>=BASE);
     $("res-venc").innerHTML = prox
-      ? "Próximo: <b>"+fmtDM(prox.data)+"</b> · "+esc(prox.desc)+" · <b class=\"num\">"+brl(prox.valor)+"</b>"
+      ? "Próximo: <b>"+fmtDM(prox.data)+"</b> · "+esc(prox.desc)+" · <b class=\"num sg\">"+brl(prox.valor)+"</b>"
       : "Nada a vencer";
 
     const pend = DADOS.recorrencias.filter(r => previstoNoMes(r, kb) && !confirmacaoDe(r.desc, kb)).length;
@@ -1320,14 +1323,14 @@ function pintaBotoes(){
     const doMesB = CAIXA.filter(m => chaveMes(m.data)===kb);
     const resB = doMesB.reduce((s,m) => s + (m.tipo==="entrada" ? m.valor : -m.valor), 0);
     const nomeB = MESES[BASE.getMonth()];
-    $("res-mes").innerHTML = nomeB.charAt(0).toUpperCase()+nomeB.slice(1)+": resultado <b class=\"num"+
+    $("res-mes").innerHTML = nomeB.charAt(0).toUpperCase()+nomeB.slice(1)+": resultado <b class=\"num sg"+
       (resB < 0 ? " neg" : "")+"\">"+brl(resB)+"</b>";
 
     const fimDia = new Map();
-    CAIXA.forEach(m => { if (m.data >= BASE) fimDia.set(iso(m.data), m.saldo); });
+    CAIXA.forEach(m => { if (m.data >= BASE && chaveMes(m.data) === kb) fimDia.set(iso(m.data), m.saldo); });
     let pior = null; fimDia.forEach((s,d) => { if (!pior || s < pior[1]) pior = [d,s]; });
     $("res-dia").innerHTML = pior
-      ? "Pior dia: <b>"+fmtDM(parse(pior[0]))+"</b> · <b class=\"num"+(pior[1] < 0 ? " neg" : "")+"\">"+brl(pior[1])+"</b>"
+      ? "Pior dia do mês: <b>"+fmtDM(parse(pior[0]))+"</b> · <b class=\"num sg"+(pior[1] < 0 ? " neg" : "")+"\">"+brl(pior[1])+"</b>"
       : "Sem movimento à frente";
 
     let totC = 0, essC = 0;
@@ -1338,15 +1341,22 @@ function pintaBotoes(){
     const fats = CARTOES.map(cc => ({cc, f:FATURAS[cc.id][0]})).filter(x => x.f)
       .sort((x,y) => x.f.vencimento - y.f.vencimento);
     $("res-cart").innerHTML = fats.length
-      ? "Próxima fatura <b class=\"num\">"+brl(fats[0].f.total)+"</b> · "+fmtDM(fats[0].f.vencimento)
+      ? "Próxima fatura <b class=\"num sg\">"+brl(fats[0].f.total)+"</b> · "+fmtDM(fats[0].f.vencimento)
       : "Sem fatura à vista";
 
     const totD = DADOS.dividas.reduce((s,d) => s + d.saldo_estimado, 0);
     $("res-div").innerHTML = DADOS.dividas.length
-      ? DADOS.dividas.length+(DADOS.dividas.length > 1 ? " dívidas" : " dívida")+" · <b class=\"num\">"+brl(totD)+"</b>"
+      ? DADOS.dividas.length+(DADOS.dividas.length > 1 ? " dívidas" : " dívida")+" · <b class=\"num sg\">"+brl(totD)+"</b>"
       : "Nenhuma dívida";
   }catch(e){ console.error("resumo dos botões falhou", e); }
 }
+
+document.addEventListener("click", e => {
+  const v = e.target.closest && e.target.closest(".sg");
+  if (!v) return;
+  e.preventDefault(); e.stopPropagation();
+  v.classList.toggle("aberto");
+}, true);
 
 const TITULOS_MES = {resumo:"Mês", assin:"Assinaturas e contas do mês", dia:"Dia a dia", cat:"Gasto por categoria"};
 let gatilhoGaveta = null;
