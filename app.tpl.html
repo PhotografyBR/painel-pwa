@@ -246,9 +246,9 @@
         <div class="v num" id="saldo-hoje"></div></div>
       <div class="fig sigilo" id="fig-previsto" role="button" tabindex="0" aria-pressed="false" aria-label="Previsto escondido. Toque para mostrar" hidden><div class="rot" id="previsto-rot"></div>
         <div class="v num" id="previsto-hoje"></div></div>
-      <div class="fig"><div class="rot" id="resumo-fim-rot">Fim do mês</div>
+      <div class="fig sigilo" role="button" tabindex="0" aria-pressed="false" aria-label="Fim do mês escondido. Toque para mostrar"><div class="rot" id="resumo-fim-rot">Fim do mês</div>
         <div class="v num" id="resumo-fim"></div></div>
-      <div class="fig"><div class="rot">Fica negativo em</div>
+      <div class="fig sigilo" role="button" tabindex="0" aria-pressed="false" aria-label="Fica negativo em: escondido. Toque para mostrar"><div class="rot">Fica negativo em</div>
         <div class="v" id="resumo-neg"></div></div>
     </div>
   </header>
@@ -736,6 +736,8 @@ function render(){
   sh.textContent = brl(SALDO_AGORA);
   sh.className = "v num";
   document.querySelectorAll(".fig.sigilo").forEach(f => {
+    if (f.dataset.sigilo) return;
+    f.dataset.sigilo = "1";
     const alterna = () => f.setAttribute("aria-pressed", String(f.classList.toggle("aberto")));
     f.addEventListener("click", alterna);
     f.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); alterna(); } });
