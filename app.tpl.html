@@ -63,6 +63,12 @@
   
   .resumo:has(#fig-previsto:not([hidden])) .fig.principal{grid-column:auto}
   .fig .v.neg{color:var(--neg)}
+  
+  .fig.sigilo{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .fig.sigilo .v{filter:blur(10px);user-select:none;-webkit-user-select:none;transition:filter .15s}
+  .fig.sigilo.aberto .v{filter:none;user-select:auto;-webkit-user-select:auto}
+  .fig.sigilo .rot::after{content:" · toque para ver";text-transform:none;letter-spacing:0;font-weight:400;opacity:.8}
+  .fig.sigilo.aberto .rot::after{content:" · toque para esconder"}
 
   #alertas{display:grid;gap:8px}
   #alertas:empty{display:none}
@@ -236,9 +242,9 @@
       <div class="sub" id="asof"></div>
     </div>
     <div class="resumo">
-      <div class="fig principal"><div class="rot" id="saldo-rot">Saldo nas contas hoje</div>
+      <div class="fig principal sigilo" role="button" tabindex="0" aria-pressed="false" aria-label="Saldo escondido. Toque para mostrar"><div class="rot" id="saldo-rot">Saldo nas contas hoje</div>
         <div class="v num" id="saldo-hoje"></div></div>
-      <div class="fig" id="fig-previsto" hidden><div class="rot" id="previsto-rot"></div>
+      <div class="fig sigilo" id="fig-previsto" role="button" tabindex="0" aria-pressed="false" aria-label="Previsto escondido. Toque para mostrar" hidden><div class="rot" id="previsto-rot"></div>
         <div class="v num" id="previsto-hoje"></div></div>
       <div class="fig"><div class="rot" id="resumo-fim-rot">Fim do mês</div>
         <div class="v num" id="resumo-fim"></div></div>
@@ -729,6 +735,11 @@ function render(){
   const sh=document.getElementById("saldo-hoje");
   sh.textContent = brl(SALDO_AGORA);
   sh.className = "v num";
+  document.querySelectorAll(".fig.sigilo").forEach(f => {
+    const alterna = () => f.setAttribute("aria-pressed", String(f.classList.toggle("aberto")));
+    f.addEventListener("click", alterna);
+    f.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); alterna(); } });
+  });
 
   const hj = hojeMeioDia(), cd = cartoesDoDia(hj);
   if (cd.length){
