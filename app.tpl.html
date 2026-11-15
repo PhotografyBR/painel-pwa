@@ -39,6 +39,10 @@
   .wrap{max-width:640px;margin:0 auto;padding-block:14px 0;display:flex;flex-direction:column;gap:12px;
         padding-left:max(16px,env(safe-area-inset-left,0px));
         padding-right:max(16px,env(safe-area-inset-right,0px))}
+  ::selection{background:var(--acentobg);color:var(--txt)}
+  html{scrollbar-color:var(--linha) transparent;accent-color:var(--acento)}
+  .ico{vertical-align:-2px;margin-right:6px;color:var(--acento)}
+  .fig .v,.tile .res,.kpi .val{font-variant-numeric:tabular-nums}
   .num{font-variant-numeric:tabular-nums;white-space:nowrap}
   .neg{color:var(--neg)} .pos{color:var(--pos)}
   .det{color:var(--fraco);font-size:12.5px}
@@ -67,17 +71,20 @@
   .fig.sigilo{cursor:pointer;-webkit-tap-highlight-color:transparent}
   .fig.sigilo .v{filter:blur(10px);user-select:none;-webkit-user-select:none;transition:filter .15s}
   .fig.sigilo.aberto .v{filter:none;user-select:auto;-webkit-user-select:auto}
-  .fig.sigilo .rot::after{content:" · toque para ver";text-transform:none;letter-spacing:0;font-weight:400;opacity:.8}
-  .fig.sigilo.aberto .rot::after{content:" · toque para esconder"}
+  .fig.sigilo.principal .rot::after{content:" · toque para ver";text-transform:none;letter-spacing:0;font-weight:400;opacity:.8}
+  .fig.sigilo.principal.aberto .rot::after{content:" · toque para esconder"}
   
   .sg{filter:blur(7px);cursor:pointer;user-select:none;-webkit-user-select:none;transition:filter .15s;padding:0 2px}
   .sg.aberto{filter:none;user-select:auto;-webkit-user-select:auto}
 
   #alertas{display:grid;gap:8px}
   #alertas:empty{display:none}
-  .alerta{border-left:4px solid var(--alerta);background:var(--alertabg);
-          border-radius:8px;padding:10px 14px;font-size:13.5px;color:var(--txt)}
-  .alerta.grave{border-left-color:var(--neg);background:var(--negbg)}
+  .alerta{position:relative;border:1px solid var(--alerta);background:var(--alertabg);
+          border-radius:10px;padding:10px 14px 10px 30px;font-size:13.5px;color:var(--txt)}
+  .alerta::before{content:"";position:absolute;left:13px;top:15px;width:8px;height:8px;
+                  border-radius:50%;background:var(--alerta)}
+  .alerta.grave{border-color:var(--neg);background:var(--negbg)}
+  .alerta.grave::before{background:var(--neg)}
   .alerta b.tit{display:block;font-weight:600;margin-bottom:1px}
 
   .chip{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border-radius:12px;
@@ -92,6 +99,8 @@
   .grade{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .tile{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;
         min-height:84px;padding:14px;border-radius:14px}
+  .tile{transition:border-color .15s,transform .15s cubic-bezier(.2,.8,.2,1)}
+  .tile:active{transform:scale(.985)}
   .tile.largo{grid-column:1 / -1;min-height:0}
   .tile .nome{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;width:100%}
   .tile .seta{margin-left:auto;color:var(--apagado);font-weight:400}
@@ -755,7 +764,7 @@ function render(){
     }
     const fmt = d => d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
     document.getElementById("cartao-dia").innerHTML =
-      "💳 Cartão de hoje: <b>"+esc(cd[0].c.nome)+"</b> — paga em "+fmt(cd[0].venc)+
+      '<svg class="ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 6.5h13" stroke="currentColor" stroke-width="1.4"/></svg>Cartão de hoje: <b>'+esc(cd[0].c.nome)+"</b> — paga em "+fmt(cd[0].venc)+
       " ("+cd[0].dias+" dias)"+
       (troca ? " · a partir de "+fmt(troca.d)+": "+esc(troca.x.c.nome) : "")+
       (troca && cd[0].venc.getMonth() === hj.getMonth() &&
