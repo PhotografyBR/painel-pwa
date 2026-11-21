@@ -420,8 +420,11 @@ const INICIO_CARENCIA = new Date(BASE.getTime() - CARENCIA_DIAS*864e5);
 const cat   = id => DADOS.categorias.find(c=>c.id===id);
 
 function fechamentoDe(cartao, data){
-  let f = dataNo(data.getFullYear(), data.getMonth(), cartao.fecha_dia);
-  if (data >= f) f = dataNo(data.getFullYear(), data.getMonth()+1, cartao.fecha_dia);
+  const doMes = (a, m) => { const n = dataNo(a, m, cartao.fecha_dia);
+    const ex = (cartao.fecha_excecoes || {})[n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")];
+    return ex ? dataNo(n.getFullYear(), n.getMonth(), ex) : n; };
+  let f = doMes(data.getFullYear(), data.getMonth());
+  if (data >= f) f = doMes(data.getFullYear(), data.getMonth()+1);
   return f;
 }
 function vencimentoDe(cartao, fechamento){
