@@ -738,6 +738,7 @@ function montaAlertas(){
     const falta = f.total - (propria.saldo||0);
     if (falta <= 0) return;
     const limite = new Date(f.vencimento.getTime() - 864e5);
+    if ((limite - hojeMeioDia()) / 864e5 > 7) return;
     A.push({grave:false,
       t:"Transferir "+brl(falta)+" para o "+propria.nome+" até "+
         limite.toLocaleDateString("pt-BR"),
