@@ -649,6 +649,16 @@ CAIXA.forEach(m=>{ acum += (m.tipo==="entrada"? m.valor : -m.valor); m.saldo = a
 PRIMEIRO_NEG = CAIXA.find(m=>m.saldo < 0) || null;
 }
 
+const LIMITE_BAIXO = 500;
+function limiteLivre(c){
+  if (c.disponivel == null || !c.disponivel_em) return null;
+  const em = parse(c.disponivel_em);
+  if ((hojeMeioDia() - em) / 864e5 > 20) return null;
+  let v = c.disponivel;
+  (DADOS.lancamentos||[]).forEach(l => { if (l.conta === c.id && l.tipo !== "entrada" && l.data > c.disponivel_em) v -= l.valor; });
+  (DADOS.parcelamentos||[]).forEach(q => { if (q.conta === c.id && q.compra && q.compra > c.disponivel_em) v -= q.valor * q.restantes; });
+  return Math.round(v * 100) / 100;
+}
 function cartoesDoDia(dt){
   return DADOS.contas
     .filter(c => c.tipo === "cartao" && c.uso_geral !== false)
@@ -661,6 +671,15 @@ function hojeMeioDia(){ const n = new Date();
 
 function montaAlertas(){
   const A=[];
+
+  DADOS.contas.filter(c => c.tipo === "cartao").forEach(c => {
+    const lv = limiteLivre(c);
+    if (lv !== null && lv < LIMITE_BAIXO)
+      A.push({grave:false,
+        t: esc(c.nome)+": limite livre baixo, cerca de "+brl(lv),
+        c: "Último valor informado pelo banco em "+parse(c.disponivel_em).toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+", menos o que foi lançado depois. "+
+           "Para compra maior, use outro cartão. Informe o limite de novo quando pagar a fatura."});
+  });
 
   const confs = (DADOS.conferencias||[]).slice().sort((a,b)=>a.data<b.data?-1:1);
   const ult = confs[confs.length-1];
@@ -769,6 +788,12 @@ function render(){
     document.getElementById("cartao-dia").innerHTML =
       '<svg class="ico" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 6.5h13" stroke="currentColor" stroke-width="1.4"/></svg>Cartão de hoje: <b>'+esc(cd[0].c.nome)+"</b> — paga em "+fmt(cd[0].venc)+
       " ("+cd[0].dias+" dias)"+
+      (function(){ const lv = limiteLivre(cd[0].c);
+        if (lv === null || lv >= LIMITE_BAIXO) return "";
+        const alt = cd.find(x => { const l2 = limiteLivre(x.c); return l2 === null || l2 >= LIMITE_BAIXO; });
+        return "<br>⚠ Limite livre estimado de "+esc(cd[0].c.nome)+": "+brl(lv)+
+               ". Só cabe compra pequena"+(alt ? "; para compra maior use "+esc(alt.c.nome)+
+               " (paga em "+fmt(alt.venc)+", "+alt.dias+" dias)." : "."); })()+
       (troca ? " · a partir de "+fmt(troca.d)+": "+esc(troca.x.c.nome) : "")+
       (troca && cd[0].venc.getMonth() === hj.getMonth() &&
        troca.x.venc.getMonth() !== hj.getMonth()
