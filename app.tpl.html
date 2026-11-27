@@ -5,32 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Finanças do Caio</title>
 <style>
-  @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap");
+  @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
   
   :root{
-    --bg:#f2f4f6; --card:#ffffff; --linha:#e1e6eb; --linha2:#eef1f4;
-    --txt:#14202b; --fraco:#5b6876; --apagado:#8a96a3;
-    --acento:#1d5c7a; --acentobg:#e6eff4;
-    --neg:#b4382f; --pos:#1f7a4d; --alerta:#a86512;
-    --negbg:#fbecea; --posbg:#e8f4ee; --alertabg:#fbf1e3;
-    --fonte:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  }
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]){
-      --bg:#0e141a; --card:#151d25; --linha:#25303b; --linha2:#1c252e;
-      --txt:#e6edf3; --fraco:#97a5b2; --apagado:#6c7a87;
-      --acento:#72b4d4; --acentobg:#17303d;
-      --neg:#f08a7e; --pos:#6fd3a0; --alerta:#e3a95c;
-      --negbg:#2d1a18; --posbg:#13281e; --alertabg:#2b2215;
-      color-scheme:dark;
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#0e141a; --card:#151d25; --linha:#25303b; --linha2:#1c252e;
-    --txt:#e6edf3; --fraco:#97a5b2; --apagado:#6c7a87;
-    --acento:#72b4d4; --acentobg:#17303d;
-    --neg:#f08a7e; --pos:#6fd3a0; --alerta:#e3a95c;
-    --negbg:#2d1a18; --posbg:#13281e; --alertabg:#2b2215;
+    --bg:#0F1115; --card:#181B22; --linha:#2A2F3A; --linha2:#20242D;
+    --txt:#E7E9EE; --fraco:#9AA3AF; --apagado:#6E7785;
+    --acento:#22C55E; --acentobg:#12301F;
+    --neg:#F87171; --pos:#34D27A; --alerta:#F5B83D;
+    --negbg:#341515; --posbg:#10291B; --alertabg:#2E2410;
+    --fonte:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --abas:calc(64px + env(safe-area-inset-bottom,0px));
     color-scheme:dark;
   }
   *{box-sizing:border-box}
@@ -87,32 +71,6 @@
   .alerta.grave::before{background:var(--neg)}
   .alerta b.tit{display:block;font-weight:600;margin-bottom:1px}
 
-  .chip{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border-radius:12px;
-        padding:10px 14px;min-height:44px}
-  .chip .ponto{width:10px;height:10px;border-radius:50%;background:var(--pos);flex:none}
-  .chip.grave{background:var(--negbg);border-color:var(--neg)}
-  .chip.grave .ponto{background:var(--neg)}
-  .chip.atencao{background:var(--alertabg);border-color:var(--alerta)}
-  .chip.atencao .ponto{background:var(--alerta)}
-  .chip .seta{margin-left:auto;color:var(--fraco)}
-  .chip:disabled{cursor:default;opacity:1}
-  .grade{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .tile{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;
-        min-height:84px;padding:14px;border-radius:14px}
-  .tile{transition:border-color .15s,transform .15s cubic-bezier(.2,.8,.2,1)}
-  .tile:active{transform:scale(.985)}
-  .tile.largo{grid-column:1 / -1;min-height:0}
-  .tile .nome{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;width:100%}
-  .tile .seta{margin-left:auto;color:var(--apagado);font-weight:400}
-  .tile .res{font-size:13px;color:var(--fraco);line-height:1.35}
-  .tile .res b{color:var(--txt);font-weight:600}
-  .selo{display:inline-block;font-size:11.5px;font-weight:700;min-width:22px;text-align:center;
-        border-radius:999px;padding:1px 7px;background:var(--alerta);color:var(--card)}
-  .selo[hidden]{display:none}
-  .barra-fixa{position:sticky;bottom:0;margin:0 -16px;z-index:10;
-              padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));
-              background:linear-gradient(to top,var(--bg) 70%,transparent)}
-  .barra-fixa button{width:100%;min-height:50px;font-size:16px}
   h2{font-size:12px;margin:0 0 8px;font-weight:600;text-transform:uppercase;
      letter-spacing:.08em;color:var(--fraco)}
   .bloco + .bloco, .sub-bloco{margin-top:0}
@@ -226,14 +184,8 @@
   #g-mes .sec-resumo footer{margin-top:18px}
   #g-mes[data-sec="comp"] .sec-comp{display:block}
   
-  .sec-comp{--g-div:#257de0;--g-casa:#f47230;--g-assin:#00b894;--g-parc:#f2a600;
-            --g-dia:#ee7fac;--g-semdet:#9aa5b0}
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme="light"]) .sec-comp{--g-div:#338ced;--g-casa:#e76624;--g-assin:#00a888;
-      --g-parc:#d28e05;--g-dia:#e24d8b;--g-semdet:#5d6b78}
-  }
-  :root[data-theme="dark"] .sec-comp{--g-div:#338ced;--g-casa:#e76624;--g-assin:#00a888;
-      --g-parc:#d28e05;--g-dia:#e24d8b;--g-semdet:#5d6b78}
+  .sec-comp{--g-div:#338ced;--g-casa:#e76624;--g-assin:#00a888;
+            --g-parc:#d28e05;--g-dia:#e24d8b;--g-semdet:#5d6b78}
   .sec-comp .card+.card{margin-top:14px}
   #comp-graf svg{display:block;width:100%;height:auto;touch-action:manipulation}
   #comp-graf .eixo{stroke:var(--linha);stroke-width:1}
@@ -280,63 +232,126 @@
   }
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   .gaveta-cab button{min-height:44px}
+
+  body{font-size:15px}
+  .wrap{gap:18px;padding-block:18px calc(var(--abas) + 24px)}
+  .ola{display:flex;flex-direction:column;gap:2px}
+  .ola-data{font-size:14px;color:var(--fraco)}
+  .ola h1{font-size:26px;font-weight:700}
+  .semaforo{display:flex;flex-direction:column;align-items:stretch;gap:10px;width:100%;text-align:left;
+            border-radius:24px;padding:22px;border:1.5px solid var(--sem);background:var(--sembg);
+            color:var(--txt);--sem:var(--pos);--sembg:var(--posbg)}
+  .semaforo:hover{border-color:var(--sem)}
+  .semaforo:disabled{cursor:default;opacity:1}
+  .semaforo.amarelo{--sem:var(--alerta);--sembg:var(--alertabg)}
+  .semaforo.vermelho{--sem:var(--neg);--sembg:var(--negbg)}
+  .sem-cab{display:flex;align-items:center;gap:12px}
+  .sem-ico{width:44px;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;
+           background:var(--sem);color:var(--bg);flex:none}
+  .sem-rot{font-size:15px;font-weight:600;color:var(--sem)}
+  .sem-tit{font-size:24px;font-weight:800;line-height:1.2;text-wrap:balance}
+  .sem-det{font-size:15px;line-height:1.4;color:#C9CED6}
+  .sem-graves{display:flex;flex-direction:column;gap:6px}
+  .sem-graves:empty,.sem-mais:empty{display:none}
+  .sem-grave{display:flex;gap:8px;align-items:flex-start;font-size:14px;font-weight:600;line-height:1.35;
+             color:var(--neg);background:rgba(0,0,0,.25);border-radius:12px;padding:8px 10px}
+  .sem-grave svg{flex:none;margin-top:1px}
+  .sem-mais{font-size:13px;color:var(--fraco)}
+  .duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .quadro{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;min-width:0;
+          min-height:96px;background:var(--card);border:0;border-radius:20px;padding:16px;color:var(--txt)}
+  .quadro[hidden]{display:none}
+  .quadro .rot{font-size:13px;color:var(--fraco);display:flex;align-items:center;gap:6px;
+               text-transform:none;letter-spacing:0;font-weight:400}
+  .quadro .v{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0;line-height:1.15;
+             overflow-wrap:anywhere}
+  .quadro .dica{font-size:12px;color:var(--fraco);line-height:1.35}
+  .quadro.sigilo .v{filter:blur(10px)}
+  .quadro.sigilo.aberto .v{filter:none}
+  .quadro.sigilo .dica::after{content:"toque para ver"}
+  .quadro.sigilo.aberto .dica::after{content:"toque para esconder"}
+  .quadro .aviso-lim{color:var(--alerta)}
+  .vem{display:flex;flex-direction:column;gap:8px}
+  .vem-cab{display:flex;justify-content:space-between;align-items:center}
+  .vem-cab h2{font-size:17px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--txt);margin:0}
+  .link{border:0;background:none;color:var(--fraco);padding:0 4px;min-height:44px;font-size:14px}
+  .link:hover{color:var(--txt)}
+  .vem-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .vem-lista li{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;
+                padding:12px 14px;min-height:52px}
+  .vem-lista .dm{width:42px;flex:none;display:flex;flex-direction:column;align-items:center;line-height:1.05}
+  .vem-lista .dm b{font-size:18px;font-weight:700}
+  .vem-lista .dm span{font-size:11px;color:var(--fraco)}
+  .vem-lista .nome{flex:1;min-width:0;font-size:15px}
+  .vem-lista .nome .txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .vem-lista .nome .det{display:block;font-size:12px}
+  .vem-lista .valor{font-size:15px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .vem-lista .vazio{background:none;padding:6px 2px;color:var(--fraco)}
+  button.gastei{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:60px;
+                border:0;border-radius:20px;background:var(--acento);color:#06210F;font-size:19px;font-weight:800}
+  button.gastei:hover{background:#2bd468}
+  .abas{position:fixed;left:0;right:0;bottom:0;z-index:60;height:var(--abas);
+        padding-bottom:env(safe-area-inset-bottom,0px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+        background:#12151B;border-top:1px solid #22262F}
+  .abas button{border:0;border-radius:0;background:none;color:var(--fraco);display:flex;flex-direction:column;
+               align-items:center;justify-content:center;gap:4px;font-size:12px;min-height:44px}
+  .abas button[aria-current="page"]{color:var(--acento);font-weight:600}
+  .gaveta{bottom:var(--abas);max-height:calc(90% - var(--abas))}
+  .seg [data-grupo][hidden]{display:none}
+  #g-mes[data-sec="venc"] .nav{display:none}
+  #g-mes[data-sec="venc"] .sec-venc{display:block}
+  .sec-venc .nota{margin-top:12px}
+  .sec-resumo .resumo{margin-bottom:12px}
+  #g-cart .gaveta-corpo h2{margin:8px 2px 0}
+  @media(min-width:900px){ .gaveta{top:0;max-height:none} }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header class="topo">
-    <div>
-      <h1>Finanças do Caio</h1>
-      <div class="sub" id="asof"></div>
-    </div>
-    <div class="resumo">
-      <div class="fig principal sigilo" role="button" tabindex="0" aria-pressed="false" aria-label="Saldo escondido. Toque para mostrar"><div class="rot" id="saldo-rot">Saldo nas contas hoje</div>
-        <div class="v num" id="saldo-hoje"></div></div>
-      <div class="fig sigilo" id="fig-previsto" role="button" tabindex="0" aria-pressed="false" aria-label="Previsto escondido. Toque para mostrar" hidden><div class="rot" id="previsto-rot"></div>
-        <div class="v num" id="previsto-hoje"></div></div>
-      <div class="fig sigilo" role="button" tabindex="0" aria-pressed="false" aria-label="Fim do mês escondido. Toque para mostrar"><div class="rot" id="resumo-fim-rot">Fim do mês</div>
-        <div class="v num" id="resumo-fim"></div></div>
-      <div class="fig sigilo" role="button" tabindex="0" aria-pressed="false" aria-label="Fica negativo em: escondido. Toque para mostrar"><div class="rot">Fica negativo em</div>
-        <div class="v" id="resumo-neg"></div></div>
-    </div>
+  <header class="ola">
+    <div class="ola-data" id="ini-data"></div>
+    <h1>Oi, Caio</h1>
   </header>
 
-  <div id="cartao-dia" class="det"></div>
+  <button type="button" id="semaforo" class="semaforo" data-abre="alertas">
+    <span class="sem-cab"><span class="sem-ico" id="sem-ico" aria-hidden="true"></span><span class="sem-rot" id="sem-rot"></span></span>
+    <span class="sem-tit" id="sem-tit"></span>
+    <span class="sem-det" id="sem-det"></span>
+    <span class="sem-graves" id="sem-graves"></span>
+    <span class="sem-mais" id="sem-mais"></span>
+  </button>
 
-  <button type="button" id="chip" class="chip" data-abre="alertas"></button>
-
-  <nav class="grade" aria-label="Seções do app">
-    <button type="button" class="tile largo" data-abre="venc">
-      <span class="nome">Vencimentos<span class="seta" aria-hidden="true">›</span></span>
-      <span class="res" id="res-venc"></span></button>
-    <button type="button" class="tile" data-abre="mes" data-sec="assin">
-      <span class="nome">Assinaturas e contas <span class="selo" id="selo-assin" hidden></span><span class="seta" aria-hidden="true">›</span></span>
-      <span class="res" id="res-assin"></span></button>
-    <button type="button" class="tile" data-abre="mes" data-sec="resumo">
-      <span class="nome">Mês<span class="seta" aria-hidden="true">›</span></span>
-      <span class="res" id="res-mes"></span></button>
-    <button type="button" class="tile" data-abre="mes" data-sec="dia">
-      <span class="nome">Dia a dia<span class="seta" aria-hidden="true">›</span></span>
-      <span class="res" id="res-dia"></span></button>
-    <button type="button" class="tile" data-abre="mes" data-sec="cat">
-      <span class="nome">Categorias<span class="seta" aria-hidden="true">›</span></span>
-      <span class="res" id="res-cat"></span></button>
-    <button type="button" class="tile" data-abre="mes" data-sec="comp">
-      <span class="nome">Comparar meses<span class="seta" aria-hidden="true">›</span></span>
-      <span class="res" id="res-comp"></span></button>
-    <button type="button" class="tile" data-abre="cart">
-      <span class="nome">Cartões<span class="seta" aria-hidden="true">›</span></span>
-      <span class="res" id="res-cart"></span></button>
-    <button type="button" class="tile" data-abre="div">
-      <span class="nome">Dívidas<span class="seta" aria-hidden="true">›</span></span>
-      <span class="res" id="res-div"></span></button>
-  </nav>
-
-  <div class="barra-fixa">
-    <button id="abre-lancar" class="primario" type="button" aria-expanded="false" aria-controls="lancar">+ Lançar gasto</button>
+  <div class="duo">
+    <div class="quadro sigilo" id="fig-saldo" role="button" tabindex="0" aria-pressed="false" aria-label="Saldo escondido. Toque para mostrar">
+      <span class="rot"><span id="saldo-rot">Saldo hoje</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <span class="v num" id="saldo-hoje"></span>
+      <span class="dica"></span></div>
+    <div class="quadro sigilo" id="fig-previsto" role="button" tabindex="0" aria-pressed="false" aria-label="Saldo previsto escondido. Toque para mostrar" hidden>
+      <span class="rot"><span id="previsto-rot"></span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <span class="v num" id="previsto-hoje"></span>
+      <span class="dica">previsão · </span></div>
+    <button type="button" class="quadro" id="ini-cartao" data-abre="cart">
+      <span class="rot">Hoje passe no</span>
+      <span class="v" id="ini-cartao-nome"></span>
+      <span class="dica" id="ini-cartao-det"></span></button>
   </div>
+
+  <section class="vem" aria-labelledby="tit-vem">
+    <div class="vem-cab"><h2 id="tit-vem">Contas que vêm aí</h2>
+      <button type="button" class="link" data-abre="mes" data-sec="venc">ver todas</button></div>
+    <ul class="vem-lista" id="ini-contas"></ul>
+  </section>
+
+  <button id="abre-lancar" class="gastei" type="button" aria-expanded="false" aria-controls="lancar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>Gastei</button>
 </div>
+
+<nav class="abas" aria-label="Seções do app">
+  <button type="button" data-fecha data-aba="inicio" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Início</button>
+  <button type="button" data-abre="mes" data-sec="assin" data-aba="contas"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16"/><path d="M9 3v4"/><path d="M15 3v4"/></svg>Contas</button>
+  <button type="button" data-abre="mes" data-sec="resumo" data-aba="meses"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 20V11"/><path d="M12 20V5"/><path d="M18 20v-7"/></svg>Meses</button>
+  <button type="button" data-abre="cart" data-aba="cartoes"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg>Cartões</button>
+</nav>
 
 <div id="veu" class="veu" hidden></div>
 
@@ -369,17 +384,6 @@
   <div class="gaveta-corpo"><div id="alertas"></div></div>
 </section>
 
-<section id="g-venc" class="gaveta" role="dialog" aria-modal="true" aria-labelledby="tit-venc" hidden>
-  <header class="gaveta-cab"><div class="linha-cab"><h2 class="gaveta-tit" id="tit-venc" tabindex="-1">Próximos vencimentos</h2>
-    <button type="button" data-fecha>Fechar</button></div></header>
-  <div class="gaveta-corpo">
-    <div class="card"><table id="agenda"><tbody></tbody></table></div>
-    <p class="nota">Nenhuma dessas contas dá desconto para pagar antes: pagar na data é
-    sempre igual ou melhor. Em <b>débito automático</b>, o saldo precisa estar na conta
-    no dia anterior.</p>
-  </div>
-</section>
-
 <section id="g-mes" class="gaveta" role="dialog" aria-modal="true" aria-labelledby="tit-mes" data-sec="resumo" hidden>
   <header class="gaveta-cab">
     <div class="linha-cab"><h2 class="gaveta-tit" id="tit-mes" tabindex="-1">Mês</h2>
@@ -392,16 +396,30 @@
         <button id="hoje-btn">Mês atual</button>
       </div>
     </div>
-    <div class="seg" role="group" aria-label="O que ver neste mês">
-      <button type="button" data-sec="resumo" aria-pressed="true">Resumo</button>
-      <button type="button" data-sec="assin" aria-pressed="false">Contas</button>
-      <button type="button" data-sec="dia" aria-pressed="false">Dia a dia</button>
-      <button type="button" data-sec="cat" aria-pressed="false">Categorias</button>
-      <button type="button" data-sec="comp" aria-pressed="false">Comparar</button>
+    <div class="seg" role="group" aria-label="O que ver">
+      <button type="button" data-sec="venc" data-grupo="contas" aria-pressed="false">Próximas</button>
+      <button type="button" data-sec="assin" data-grupo="contas" aria-pressed="false">Do mês</button>
+      <button type="button" data-sec="resumo" data-grupo="meses" aria-pressed="true">Mês</button>
+      <button type="button" data-sec="comp" data-grupo="meses" aria-pressed="false">Comparar</button>
+      <button type="button" data-sec="cat" data-grupo="meses" aria-pressed="false">Categorias</button>
+      <button type="button" data-sec="dia" data-grupo="meses" aria-pressed="false">Dia a dia</button>
     </div>
   </header>
   <div class="gaveta-corpo">
+    <div class="sec sec-venc">
+      <div class="card"><table id="agenda"><tbody></tbody></table></div>
+      <p class="nota">Nenhuma dessas contas dá desconto para pagar antes: pagar na data é
+      sempre igual ou melhor. Em <b>débito automático</b>, o saldo precisa estar na conta
+      no dia anterior.</p>
+    </div>
     <div class="sec sec-resumo">
+      <div class="resumo">
+        <div class="fig sigilo" role="button" tabindex="0" aria-pressed="false" aria-label="Fim do mês escondido. Toque para mostrar"><div class="rot" id="resumo-fim-rot">Fim do mês</div>
+          <div class="v num" id="resumo-fim"></div></div>
+        <div class="fig sigilo" role="button" tabindex="0" aria-pressed="false" aria-label="Fica negativo em: escondido. Toque para mostrar"><div class="rot">Fica negativo em</div>
+          <div class="v" id="resumo-neg"></div></div>
+      </div>
+      <div class="sub" id="asof"></div>
       <div class="grid" id="kpis"></div>
       <div id="teto" hidden></div>
       <button id="baixar" type="button" title="Salva uma cópia do dados.json" style="align-self:flex-start">Baixar dados</button>
@@ -432,15 +450,14 @@
 </section>
 
 <section id="g-cart" class="gaveta" role="dialog" aria-modal="true" aria-labelledby="tit-cart" hidden>
-  <header class="gaveta-cab"><div class="linha-cab"><h2 class="gaveta-tit" id="tit-cart" tabindex="-1">Cartões</h2>
+  <header class="gaveta-cab"><div class="linha-cab"><h2 class="gaveta-tit" id="tit-cart" tabindex="-1">Cartões e dívidas</h2>
     <button type="button" data-fecha>Fechar</button></div></header>
-  <div class="gaveta-corpo"><div class="card"><table id="cartoes"><tbody></tbody></table></div></div>
-</section>
-
-<section id="g-div" class="gaveta" role="dialog" aria-modal="true" aria-labelledby="tit-div" hidden>
-  <header class="gaveta-cab"><div class="linha-cab"><h2 class="gaveta-tit" id="tit-div" tabindex="-1">Dívidas</h2>
-    <button type="button" data-fecha>Fechar</button></div></header>
-  <div class="gaveta-corpo"><div class="card"><table id="dividas"><tbody></tbody></table></div></div>
+  <div class="gaveta-corpo">
+    <div id="cartao-dia" class="det"></div>
+    <div class="card"><table id="cartoes"><tbody></tbody></table></div>
+    <h2>Dívidas</h2>
+    <div class="card"><table id="dividas"><tbody></tbody></table></div>
+  </div>
 </section>
 
 <script>
@@ -789,7 +806,8 @@ function montaAlertas(){
     if (falta <= 0) return;
     const limite = new Date(f.vencimento.getTime() - 864e5);
     if ((limite - hojeMeioDia()) / 864e5 > 7) return;
-    A.push({grave:false,
+    A.push({grave:false, tipo:"debito", quando:f.vencimento, falta, total:f.total,
+      cartao:cc.nome, contaNome:propria.nome, saldoConta:propria.saldo||0,
       t:"Transferir "+brl(falta)+" para o "+propria.nome+" até "+
         limite.toLocaleDateString("pt-BR"),
       c:"A fatura do "+cc.nome+", "+brl(f.total)+", é debitada automaticamente em "+
@@ -808,6 +826,7 @@ function montaAlertas(){
   return A;
 }
 
+let SALDO_TELA = 0;   // o número do quadro "Saldo hoje" (fato ou previsão de hoje)
 let mesAtual = new Date(BASE.getFullYear(), BASE.getMonth(), 1, 12, 0, 0);
 
 function render(){
@@ -820,7 +839,7 @@ function render(){
   const sh=document.getElementById("saldo-hoje");
   sh.textContent = brl(SALDO_AGORA);
   sh.className = "v num";
-  document.querySelectorAll(".fig.sigilo").forEach(f => {
+  document.querySelectorAll(".sigilo").forEach(f => {
     if (f.dataset.sigilo) return;
     f.dataset.sigilo = "1";
     const alterna = () => f.setAttribute("aria-pressed", String(f.classList.toggle("aberto")));
@@ -857,15 +876,18 @@ function render(){
   const dm = d => d.toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"});
   const atrasado = hj > BASE;
   document.getElementById("saldo-rot").textContent =
-    atrasado ? "Saldo em "+dm(BASE) : "Saldo nas contas hoje";
+    atrasado ? "Saldo em "+dm(BASE) : "Saldo hoje";
   const figp = document.getElementById("fig-previsto");
   figp.hidden = !atrasado;
+  document.getElementById("fig-saldo").hidden = atrasado;
+  SALDO_TELA = SALDO_AGORA;
   if (atrasado){
     const prev = SALDO_INICIAL + CAIXA.filter(m => m.data <= hj)
       .reduce((s,m) => s + (m.tipo === "entrada" ? m.valor : -m.valor), 0);
-    document.getElementById("previsto-rot").textContent = "Previsto hoje, "+dm(hj);
+    document.getElementById("previsto-rot").textContent = "Saldo previsto hoje";
     const pv = document.getElementById("previsto-hoje");
     pv.textContent = brl(prev);
+    SALDO_TELA = prev;
     pv.className = "v num"+(prev < 0 ? " neg" : "");
   }
 
@@ -1030,7 +1052,7 @@ function render(){
            return " Última conferência de saldo: "+parse(u.data).toLocaleDateString("pt-BR")+
                   " (real "+brl(u.real)+", previsto "+brl(u.previsto)+")."; })();
 
-  pintaBotoes();
+  pintaInicio();
 }
 
 const MEXIDAS = new Set();
@@ -1656,65 +1678,125 @@ function renderComparar(){
 }
 
 const fmtDM = d => d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
-function pintaBotoes(){
+
+const SEM_JANELA = 30, SEM_URGENTE = 3;
+const SEM_ROTULO = {verde:"Tudo certo", amarelo:"Atenção", vermelho:"Precisa agir hoje"};
+const DIAS_SEM = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+const ICO_OK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ICO_EXC = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 6v8"/><path d="M12 18.5v.01"/></svg>';
+const ICO_GRAVE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3l10 18H2z" stroke-linejoin="round"/><path d="M12 10v5"/><path d="M12 18.2v.01"/></svg>';
+
+function emFolha(){
+  const s = new Set();
+  ["recorrencias","parcelamentos","eventos_previstos","sazonais"].forEach(k =>
+    (DADOS[k]||[]).forEach(x => { if (x.em_folha) s.add(x.desc); }));
+  return s;
+}
+function contasQueVem(){
+  const folha = emFolha();
+  return CAIXA.filter(m => m.tipo === "saida" && m.data >= BASE && m.origem !== "variavel" &&
+                           m.origem !== "real" && !m.confirmado && !folha.has(m.desc));
+}
+const diasAte = (d, hj) => Math.round((d - hj) / 864e5);
+function quandoTxt(d, hj){
+  const n = diasAte(d, hj);
+  return n < 0 ? "já passou da data" : n === 0 ? "vence hoje" : n === 1 ? "vence amanhã" : "vence em "+n+" dias";
+}
+
+function semaforo(){
+  const AL = montaAlertas();
+  const hj = hojeMeioDia();
+  const ini = hj > BASE ? hj : BASE;
+  const lim = new Date(ini.getTime() + SEM_URGENTE*864e5);
+
+  if (SALDO_TELA < 0) return {AL, nivel:"vermelho",
+    tit:"O saldo de hoje está negativo",
+    det:"Hoje a conta está em "+brl(SALDO_TELA)+(hj > BASE ? " (previsão a partir dos dados de "+fmtDM(BASE)+")." : ".")};
+
+  const deb = AL.find(a => a.tipo === "debito" && a.quando <= lim);
+  if (deb) return {AL, nivel:"vermelho", alerta:deb,
+    tit:"Fatura do "+deb.cartao+" "+quandoTxt(deb.quando, hj),
+    det:brl(deb.total)+" no débito automático e o "+deb.contaNome+" tem "+brl(deb.saldoConta)+
+        ". Transfira "+brl(deb.falta)+" até "+fmtDM(new Date(deb.quando.getTime() - 864e5))+"."};
+
+  const urg = contasQueVem().find(m => m.data <= lim && m.saldo < 0);
+  if (urg) return {AL, nivel:"vermelho",
+    tit:urg.desc+" "+quandoTxt(urg.data, hj),
+    det:brl(urg.valor)+" e ainda não tem dinheiro nas contas para ela: o saldo vai a "+brl(urg.saldo)+"."};
+
+  const fimJ = new Date(ini.getTime() + SEM_JANELA*864e5);
+  let sIni = SALDO_INICIAL;
+  const fimDia = new Map();
+  CAIXA.forEach(m => {
+    if (m.data <= ini) sIni = m.saldo;
+    else if (m.data <= fimJ) fimDia.set(iso(m.data), m.saldo);
+  });
+  let pior = { d:ini, s:sIni };
+  fimDia.forEach((s, k) => { if (s < pior.s) pior = { d:parse(k), s }; });
+  const n = diasAte(pior.d, hj);
+  const quando = n <= 0 ? "hoje" : fmtDM(pior.d);
+
+  if (pior.s < 0) return {AL, nivel:"amarelo",
+    tit: n <= 0 ? "Hoje fica apertado" : "Dia "+quando+" fica apertado",
+    det:"Nesse dia a conta vai a "+brl(pior.s)+". "+
+        (n <= 0 ? "É hoje." : n === 1 ? "Falta 1 dia para resolver." : "Faltam "+n+" dias para resolver.")};
+
+  let rot = SEM_ROTULO.verde;
+  if (PRIMEIRO_NEG){
+    const u = new Date(PRIMEIRO_NEG.data.getTime() - 864e5);
+    rot = "Tudo certo até "+u.getDate()+" de "+MESES[u.getMonth()]+
+          (diasAte(u, hj) > 330 ? " de "+u.getFullYear() : "");
+  }
+  return {AL, nivel:"verde", rot,
+    tit:"O dinheiro dá para os próximos 30 dias",
+    det:"O dia mais apertado é "+quando+", e mesmo nele sobram "+brl(pior.s)+"."};
+}
+
+function pintaInicio(){
   try{
     const $ = id => document.getElementById(id);
-    const kb = chaveMes(BASE);
+    const hj = hojeMeioDia();
+    $("ini-data").textContent = DIAS_SEM[hj.getDay()]+", "+hj.getDate()+" de "+MESES[hj.getMonth()];
 
-    const AL = montaAlertas();
+    const S = semaforo(), AL = S.AL;
+    const card = $("semaforo");
+    card.className = "semaforo "+S.nivel;
+    card.dataset.nivel = S.nivel;
+    $("sem-ico").innerHTML = S.nivel === "verde" ? ICO_OK : ICO_EXC;
+    $("sem-rot").textContent = S.rot || SEM_ROTULO[S.nivel];
+    $("sem-tit").textContent = S.tit;
+    $("sem-det").textContent = S.det;
     const nb = $("naosalvo");
     const semSalvar = (!nb.hidden && getComputedStyle(nb).display !== "none") ? MEXIDAS.size : 0;
-    const graves = AL.filter(a => a.grave).length;
-    const atenc  = AL.filter(a => !a.grave && !a.info).length;
-    const partes = [];
-    if (graves) partes.push("<b>"+graves+(graves > 1 ? " alertas graves" : " alerta grave")+"</b>");
-    if (semSalvar) partes.push(semSalvar+(semSalvar > 1 ? " marcações sem salvar" : " marcação sem salvar"));
-    if (atenc)  partes.push(atenc+" atenção");
-    const chip = $("chip");
-    chip.className = "chip"+(graves || semSalvar ? " grave" : atenc ? " atencao" : "");
-    chip.disabled = AL.length === 0 && !semSalvar;
-    chip.innerHTML = '<span class="ponto" aria-hidden="true"></span><span>'+
-      (partes.length ? partes.join(" · ") : "Nada urgente")+'</span>'+
-      ((AL.length || semSalvar) ? '<span class="seta" aria-hidden="true">Ver ›</span>' : "");
+    const graves = AL.filter(a => a.grave && a !== S.alerta).map(a => a.t);
+    if (semSalvar) graves.push(semSalvar+(semSalvar > 1 ? " marcações sem salvar" : " marcação sem salvar"));
+    $("sem-graves").innerHTML = graves.map(t => '<span class="sem-grave">'+ICO_GRAVE+'<span>'+t+'</span></span>').join("");
+    const resto = AL.filter(a => !a.grave && !a.info && a !== S.alerta).length;
+    $("sem-mais").textContent = resto ? "+"+resto+(resto > 1 ? " avisos" : " aviso")+" · toque para ver"
+                              : AL.length ? "Toque para ver os avisos" : "";
+    card.disabled = AL.length === 0 && !semSalvar;
 
-    const prox = CAIXA.find(m => m.tipo==="saida" && m.data>=BASE);
-    $("res-venc").innerHTML = prox
-      ? "Próximo: <b>"+fmtDM(prox.data)+"</b> · "+esc(prox.desc)+" · <b class=\"num sg\">"+brl(prox.valor)+"</b>"
-      : "Nada a vencer";
+    const cd = cartoesDoDia(hj);
+    if (cd.length){
+      const lv = limiteLivre(cd[0].c);
+      $("ini-cartao-nome").textContent = cd[0].c.nome;
+      $("ini-cartao-det").innerHTML = "fatura vence "+fmtDM(cd[0].venc)+" ("+cd[0].dias+" dias)"+
+        (lv !== null && lv < LIMITE_BAIXO ? '<br><span class="aviso-lim">limite livre baixo: '+brl(lv)+'</span>' : "");
+    } else {
+      $("ini-cartao-nome").textContent = "—";
+      $("ini-cartao-det").textContent = "nenhum cartão de uso geral";
+    }
 
-    const pend = DADOS.recorrencias.filter(r => previstoNoMes(r, kb) && !confirmacaoDe(r.desc, kb)).length;
-    $("selo-assin").hidden = pend === 0; $("selo-assin").textContent = pend;
-    $("res-assin").textContent = pend ? pend+" a confirmar este mês" : "Tudo confirmado este mês";
-
-    const doMesB = CAIXA.filter(m => chaveMes(m.data)===kb);
-    const resB = doMesB.reduce((s,m) => s + (m.tipo==="entrada" ? m.valor : -m.valor), 0);
-    const nomeB = MESES[BASE.getMonth()];
-    $("res-mes").innerHTML = nomeB.charAt(0).toUpperCase()+nomeB.slice(1)+": resultado <b class=\"num sg"+
-      (resB < 0 ? " neg" : "")+"\">"+brl(resB)+"</b>";
-
-    const fimDia = new Map();
-    CAIXA.forEach(m => { if (m.data >= BASE && chaveMes(m.data) === kb) fimDia.set(iso(m.data), m.saldo); });
-    let pior = null; fimDia.forEach((s,d) => { if (!pior || s < pior[1]) pior = [d,s]; });
-    $("res-dia").innerHTML = pior
-      ? "Pior dia do mês: <b>"+fmtDM(parse(pior[0]))+"</b> · <b class=\"num sg"+(pior[1] < 0 ? " neg" : "")+"\">"+brl(pior[1])+"</b>"
-      : "Sem movimento à frente";
-
-    let totC = 0, essC = 0;
-    LANC.filter(l => l.tipo!=="entrada" && chaveMes(l.data)===kb && l.categoria!=="reembolso")
-        .forEach(l => { totC += l.valor; if (cat(l.categoria)?.classe === "A") essC += l.valor; });
-    $("res-cat").innerHTML = totC ? "Essencial: <b>"+Math.round(essC/totC*100)+"%</b> do gasto" : "Nada gasto no mês";
-
-    const fats = CARTOES.map(cc => ({cc, f:FATURAS[cc.id][0]})).filter(x => x.f)
-      .sort((x,y) => x.f.vencimento - y.f.vencimento);
-    $("res-cart").innerHTML = fats.length
-      ? "Próxima fatura <b class=\"num sg\">"+brl(fats[0].f.total)+"</b> · "+fmtDM(fats[0].f.vencimento)
-      : "Sem fatura à vista";
-
-    const totD = DADOS.dividas.reduce((s,d) => s + d.saldo_estimado, 0);
-    $("res-div").innerHTML = DADOS.dividas.length
-      ? DADOS.dividas.length+(DADOS.dividas.length > 1 ? " dívidas" : " dívida")+" · <b class=\"num sg\">"+brl(totD)+"</b>"
-      : "Nenhuma dívida";
-  }catch(e){ console.error("resumo dos botões falhou", e); }
+    const cv = contasQueVem().slice(0, 3);
+    $("ini-contas").innerHTML = !cv.length ? '<li class="vazio">Nenhuma conta a pagar à vista.</li>' :
+      cv.map(m => {
+        const cc = m.cartao ? conta(m.cartao) : null;
+        const extra = m.data < hj ? "a data já passou" : (cc && cc.debito_automatico ? "débito automático" : "");
+        return '<li><span class="dm"><b>'+String(m.data.getDate()).padStart(2,"0")+'</b><span>'+MES3(m.data)+
+          '</span></span><span class="nome"><span class="txt">'+esc(m.desc)+'</span>'+(extra ? '<span class="det">'+extra+'</span>' : '')+
+          '</span><span class="valor">'+brl(m.valor)+'</span></li>';
+      }).join("");
+  }catch(e){ console.error("tela inicial falhou", e); }
 }
 
 document.addEventListener("click", e => {
@@ -1724,13 +1806,19 @@ document.addEventListener("click", e => {
   v.classList.toggle("aberto");
 }, true);
 
-const TITULOS_MES = {resumo:"Mês", assin:"Assinaturas e contas do mês", dia:"Dia a dia", cat:"Gasto por categoria", comp:"Comparar meses"};
+const TITULOS_MES = {venc:"Contas que vêm aí", assin:"Contas do mês", resumo:"Mês", dia:"Dia a dia", cat:"Gasto por categoria", comp:"Comparar meses"};
+const GRUPO_SEC = {venc:"contas", assin:"contas", resumo:"meses", comp:"meses", cat:"meses", dia:"meses"};
 let gatilhoGaveta = null;
 function sincVeu(){
   const aberta = !!document.querySelector(".gaveta:not([hidden])");
   document.getElementById("veu").hidden = !aberta;
   document.body.classList.toggle("travado", aberta);
   const w = document.querySelector(".wrap"); if (w) w.inert = aberta;
+  const gm = document.getElementById("g-mes");
+  const aba = !document.getElementById("g-cart").hidden ? "cartoes"
+            : !gm.hidden ? GRUPO_SEC[gm.dataset.sec] : "inicio";
+  document.querySelectorAll(".abas [data-aba]").forEach(b => {
+    if (b.dataset.aba === aba) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
 }
 function fechaGavetas(devolveFoco){
   document.querySelectorAll(".gaveta").forEach(g => g.hidden = true);
@@ -1741,7 +1829,10 @@ function fechaGavetas(devolveFoco){
 function escolheSecao(sec){
   const g = document.getElementById("g-mes");
   g.dataset.sec = sec;
-  g.querySelectorAll("[data-sec]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.sec === sec)));
+  const grupo = GRUPO_SEC[sec] || "meses";
+  g.querySelectorAll(".seg [data-sec]").forEach(b => {
+    b.setAttribute("aria-pressed", String(b.dataset.sec === sec));
+    b.hidden = b.dataset.grupo !== grupo; });
   document.getElementById("tit-mes").textContent = TITULOS_MES[sec] || "Mês";
 }
 function abreGaveta(chave, sec, gatilho){
@@ -1762,7 +1853,7 @@ document.addEventListener("click", ev => {
   if (ab){ abreGaveta(ab.dataset.abre, ab.dataset.sec, ab); return; }
   if (ev.target.closest("[data-fecha]")){ fechaGavetas(true); return; }
   const sc = ev.target.closest("#g-mes [data-sec]");
-  if (sc){ escolheSecao(sc.dataset.sec); document.getElementById("g-mes").scrollTop = 0; }
+  if (sc){ escolheSecao(sc.dataset.sec); sincVeu(); document.getElementById("g-mes").scrollTop = 0; }
 });
 document.getElementById("veu").addEventListener("click", () => fechaGavetas(true));
 document.addEventListener("keydown", ev => { if (ev.key === "Escape") fechaGavetas(true); });
