@@ -224,6 +224,43 @@
   #g-mes[data-sec="resumo"] .sec-resumo,#g-mes[data-sec="assin"] .sec-assin,
   #g-mes[data-sec="dia"] .sec-dia,#g-mes[data-sec="cat"] .sec-cat{display:block}
   #g-mes .sec-resumo footer{margin-top:18px}
+  #g-mes[data-sec="comp"] .sec-comp{display:block}
+  
+  .sec-comp{--g-div:#257de0;--g-casa:#f47230;--g-assin:#00b894;--g-parc:#f2a600;
+            --g-dia:#ee7fac;--g-semdet:#9aa5b0}
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]) .sec-comp{--g-div:#338ced;--g-casa:#e76624;--g-assin:#00a888;
+      --g-parc:#d28e05;--g-dia:#e24d8b;--g-semdet:#5d6b78}
+  }
+  :root[data-theme="dark"] .sec-comp{--g-div:#338ced;--g-casa:#e76624;--g-assin:#00a888;
+      --g-parc:#d28e05;--g-dia:#e24d8b;--g-semdet:#5d6b78}
+  .sec-comp .card+.card{margin-top:14px}
+  #comp-graf svg{display:block;width:100%;height:auto;touch-action:manipulation}
+  #comp-graf .eixo{stroke:var(--linha);stroke-width:1}
+  #comp-graf text{fill:var(--fraco);font-size:10px;font-family:inherit}
+  #comp-graf .sel-fundo{fill:var(--acentobg)}
+  #comp-graf .mes-sel{fill:var(--txt);font-weight:600}
+  #comp-graf .renda{stroke:var(--txt);stroke-width:2;stroke-linecap:round}
+  #comp-graf .pontual{fill:var(--card);stroke:var(--txt);stroke-width:1.5}
+  #comp-graf .seg{stroke:var(--card);stroke-width:2}
+  #comp-graf .alvo{fill:transparent;cursor:pointer}
+  .comp-topo{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin-bottom:8px}
+  .comp-topo b{font-size:16px}
+  .legenda{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12px;color:var(--fraco)}
+  .legenda span{display:inline-flex;align-items:center;gap:5px}
+  .legenda i{display:inline-block;width:10px;height:10px;border-radius:3px}
+  .legenda .lr{width:14px;height:0;border-top:2px solid var(--txt);border-radius:0}
+  .legenda .lp{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--txt);background:var(--card)}
+  .legenda .le{background:repeating-linear-gradient(45deg,var(--fraco) 0 2px,transparent 2px 4px)}
+  .muda td:first-child{width:22px;padding-right:0}
+  .grp-h td{font-weight:600;padding-top:14px;border-bottom:1px solid var(--linha)}
+  .grp-h i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .etq{display:inline-block;font-size:11px;padding:0 6px;border:1px solid var(--linha);
+       border-radius:999px;color:var(--fraco);margin:2px 4px 0 0;white-space:nowrap}
+  .etq.est{border-style:dashed}
+  .etq.ree{border-color:var(--pos);color:var(--pos)}
+  .item-est td{color:var(--fraco)}
+  .difer td{background:var(--alertabg)}
   @keyframes sobe{from{transform:translateY(32px);opacity:0}to{transform:none;opacity:1}}
   @keyframes entra{from{transform:translateX(32px);opacity:0}to{transform:none;opacity:1}}
   @media(min-width:900px){
@@ -285,6 +322,9 @@
     <button type="button" class="tile" data-abre="mes" data-sec="cat">
       <span class="nome">Categorias<span class="seta" aria-hidden="true">›</span></span>
       <span class="res" id="res-cat"></span></button>
+    <button type="button" class="tile" data-abre="mes" data-sec="comp">
+      <span class="nome">Comparar meses<span class="seta" aria-hidden="true">›</span></span>
+      <span class="res" id="res-comp"></span></button>
     <button type="button" class="tile" data-abre="cart">
       <span class="nome">Cartões<span class="seta" aria-hidden="true">›</span></span>
       <span class="res" id="res-cart"></span></button>
@@ -357,6 +397,7 @@
       <button type="button" data-sec="assin" aria-pressed="false">Contas</button>
       <button type="button" data-sec="dia" aria-pressed="false">Dia a dia</button>
       <button type="button" data-sec="cat" aria-pressed="false">Categorias</button>
+      <button type="button" data-sec="comp" aria-pressed="false">Comparar</button>
     </div>
   </header>
   <div class="gaveta-corpo">
@@ -378,6 +419,15 @@
     <div class="sec sec-dia"><div class="card"><div id="grafico"></div><div id="grafico-nota" class="det"></div></div>
     <div class="card"><table id="tl"><tbody></tbody></table></div></div>
     <div class="sec sec-cat"><div class="card"><table id="cat"><tbody></tbody></table></div></div>
+    <div class="sec sec-comp">
+      <div class="card"><div id="comp-topo" class="comp-topo"></div><div id="comp-graf"></div>
+        <div id="comp-leg" class="legenda"></div></div>
+      <div class="card"><table id="comp-muda" class="muda"><tbody></tbody></table></div>
+      <div class="card"><table id="comp-lista"><tbody></tbody></table></div>
+      <p class="nota">Cada barra é o que <b>sai</b> no mês (fatura conta no mês em que vence).
+      A linha preta é a renda que se repete todo mês; a bolinha é a renda somada a uma
+      entrada pontual (13º, férias, venda). Toque numa barra para ver o mês.</p>
+    </div>
   </div>
 </section>
 
@@ -888,6 +938,7 @@ function render(){
   renderConfirma();
 
   desenhaGrafico(k);
+  renderComparar();
 
   const tb=document.querySelector("#tl tbody"); tb.innerHTML="";
   if(!doMes.length){
@@ -1327,6 +1378,283 @@ function desenhaGrafico(k){
   }catch(e){ console.error("gráfico falhou", e); el.innerHTML = ""; nota.textContent = ""; }
 }
 
+const COMP_MESES = 13;
+const GRUPOS = [
+  {id:"div",    nome:"Dívidas"},
+  {id:"casa",   nome:"Casa e contas fixas"},
+  {id:"assin",  nome:"Assinaturas"},
+  {id:"parc",   nome:"Parcelas"},
+  {id:"dia",    nome:"Dia a dia"},
+  {id:"semdet", nome:"Fatura sem detalhe"}];
+const MES3 = d => MESES[d.getMonth()].slice(0,3);
+const ehPagFatura = l => /^Pagamento fatura/i.test(l.desc||"");
+function grupoDe(l){
+  if (l.semdet || ehPagFatura(l)) return "semdet";
+  if (l.origem === "parcela") return "parc";
+  if (l.categoria === "divida") return "div";
+  if (l.categoria === "reembolso") return "dia";
+  if (l.origem === "recorrencia")
+    return ["assinaturas","lazer","saude"].includes(l.categoria) ? "assin" : "casa";
+  if (l.categoria === "assinaturas") return "assin";
+  if (l.origem === "sazonal" || ["moradia","educacao","impostos","negocio"].includes(l.categoria))
+    return "casa";
+  return "dia";
+}
+const ehEstimado = l => l.origem === "variavel" || l.origem === "sazonal" || !!l.atrasada ||
+  (l.origem === "evento" && l.certeza && l.certeza !== "alta") || /ESTIMAD/i.test(l.obs||"");
+const chaveItem = d => String(d).replace(/\s*—\s*fatura de \d{2}\/\d{4}/i, "")
+                                .replace(/\s*\(o que falta do teto\)/i, "").trim();
+const ehCorrente = id => conta(id) && conta(id).tipo === "corrente";
+
+function rendaRecorrenteDe(k){
+  let v = 0;
+  DADOS.recorrencias.filter(r => r.tipo === "entrada" && r.categoria === "renda").forEach(r => {
+    const d = dataNo(+k.slice(0,4), +k.slice(5)-1, r.dia);
+    if (r.inicio && d < parse(r.inicio)) return;
+    if (r.fim && d > parse(r.fim)) return;
+    const cf = confirmacaoDe(r.desc, k);
+    if (cf && cf.estado === "cancelado") return;
+    v += (cf && cf.valor != null) ? cf.valor : r.valor;
+  });
+  return v;
+}
+
+function montaComparar(){
+  const ini = new Date(BASE.getFullYear(), BASE.getMonth(), 1, 12, 0, 0);
+  const M = {}, ordem = [];
+  for (let i = 0; i < COMP_MESES; i++){
+    const m = addMes(ini, i), k = chaveMes(m);
+    ordem.push(k);
+    M[k] = { k, mes:m, itens:[], rendaRec:rendaRecorrenteDe(k), ajusteRenda:0, pontual:[],
+             caixaSai:0, caixaAjuste:0 };
+  }
+  const kAtual = ordem[0];
+  const entrada = (bloco, l) => {
+    if (l.categoria === "reembolso") return;
+    if (l.origem === "recorrencia" && l.categoria === "renda") return;
+    bloco.pontual.push({desc:l.desc, valor:l.valor, data:l.data});
+  };
+  const poe = (l, cartao, passado) => {
+    const k = cartao ? chaveMes(l.vencFatura) : chaveMes(l.data), b = M[k];
+    if (!b) return;
+    if (l.tipo === "entrada" && !cartao){ entrada(b, l); return; }
+    if (l.categoria === "renda" && !cartao){ b.ajusteRenda += l.valor; return; }
+    b.itens.push({ desc:l.desc, valor:l.valor, grupo:grupoDe(l), est:ehEstimado(l),
+                   cartao, data:l.data, origem:l.origem, categoria:l.categoria,
+                   confirmado:!!l.confirmado, passado:!!passado,
+                   semdet:!!l.semdet || ehPagFatura(l) });
+  };
+  LANC.filter(l => ehCorrente(l.conta)).forEach(l => poe(l, null, false));
+  CARTOES.forEach(cc => FATURAS[cc.id].forEach(f => {
+    if (f.vencimento < BASE) return;
+    f.itens.forEach(l => poe({...l, vencFatura:f.vencimento}, cc, false));
+    if (f.parcial > 0.004)
+      poe({desc:"Já acumulado na fatura (sem detalhe)", valor:f.parcial, tipo:"saida",
+           vencFatura:f.vencimento, semdet:true, data:f.vencimento}, cc, false);
+  }));
+  REAIS.filter(l => ehCorrente(l.conta) && chaveMes(l.data) === kAtual && l.data < BASE)
+       .forEach(l => poe(l, null, true));
+  DADOS.recorrencias.forEach(r => geraSerie(r, "recorrencia")
+    .filter(l => l.confirmado && ehCorrente(l.conta) && chaveMes(l.data) === kAtual && l.data < BASE)
+    .forEach(l => poe(l, null, true)));
+  CAIXA.forEach(m => {
+    const b = M[chaveMes(m.data)]; if (!b || m.tipo !== "saida") return;
+    if (m.categoria === "renda") b.caixaAjuste += m.valor; else b.caixaSai += m.valor;
+  });
+  ordem.forEach(k => {
+    const b = M[k];
+    b.porGrupo = {}; GRUPOS.forEach(g => b.porGrupo[g.id] = {fato:0, est:0});
+    b.itens.forEach(i => b.porGrupo[i.grupo][i.est ? "est" : "fato"] += i.valor);
+    b.total = b.itens.reduce((s,i) => s + i.valor, 0);
+    b.totalDaqui = b.itens.filter(i => !i.passado).reduce((s,i) => s + i.valor, 0);
+    b.diferenca = b.caixaSai - b.totalDaqui;
+    b.renda = b.rendaRec - b.ajusteRenda;
+    b.pontualTot = b.pontual.reduce((s,p) => s + p.valor, 0);
+  });
+  return { M, ordem };
+}
+
+function rotuloParcela(i){
+  if (i.origem === "parcela"){
+    if (/fatura de \d{2}\/\d{4}/i.test(i.desc)) return "";
+    const n = +((i.desc.match(/\((\d+)x\)/i) || [])[1] || 0);
+    const r = LANC.filter(l => l.desc === i.desc && l.data >= i.data).length;
+    if (n && n - r + 1 >= 1) return (n - r + 1) + "/" + n + (r === 1 ? " · última" : "");
+    return r === 1 ? "última" : "faltam " + (r - 1);
+  }
+  if (i.origem === "recorrencia"){
+    const rec = DADOS.recorrencias.find(x => x.desc === i.desc);
+    if (rec && rec.fim){
+      const f = parse(rec.fim);
+      if (f < FIM) return "até " + MES3(f) + "/" + String(f.getFullYear()).slice(2);
+    }
+  }
+  return "";
+}
+
+function mudancas(ant, cur){
+  const soma = b => { const o = new Map();
+    b.itens.filter(i => !i.semdet).forEach(i => {
+      const avulsa = i.origem === "real";
+      const c = avulsa ? "Compras avulsas já lançadas" : chaveItem(i.desc);
+      const x = o.get(c) || {desc:c, valor:0, grupo:i.grupo, cartao: avulsa ? null : i.cartao};
+      x.valor += i.valor; o.set(c, x); });
+    return o; };
+  const a = soma(ant), c = soma(cur), out = [];
+  c.forEach((x, key) => { const y = a.get(key);
+    if (!y) out.push({tipo:"entra", ...x});
+    else if (Math.abs(x.valor - y.valor) > 5) out.push({tipo:"muda", ...x, antes:y.valor}); });
+  a.forEach((y, key) => { if (!c.has(key)) out.push({tipo:"acaba", ...y}); });
+  const peso = {acaba:0, entra:1, muda:2};
+  return out.sort((p,q) => peso[p.tipo]-peso[q.tipo] || Math.abs(q.valor)-Math.abs(p.valor));
+}
+
+let COMP = null;
+function renderComparar(){
+  const topo = document.getElementById("comp-topo"); if (!topo) return;
+  const el = document.getElementById("comp-graf"), leg = document.getElementById("comp-leg");
+  const tm = document.querySelector("#comp-muda tbody"), tl = document.querySelector("#comp-lista tbody");
+  COMP = montaComparar();
+  const { M, ordem } = COMP, kSel = chaveMes(mesAtual), b = M[kSel];
+
+  const piorK = ordem.slice(1).reduce((p,k) => (M[k].renda - M[k].total) < (M[p].renda - M[p].total) ? k : p, ordem[1]);
+  const rc = document.getElementById("res-comp");
+  if (rc){ const s = M[piorK].renda - M[piorK].total;
+    rc.innerHTML = s < 0 ? 'Mais apertado: <b>'+MES3(M[piorK].mes)+'/'+String(M[piorK].mes.getFullYear()).slice(2)+
+        '</b>, sai <b class="num sg neg">'+brl(-s)+'</b> a mais que a renda'
+      : 'Nenhum mês sai mais que a renda'; }
+
+  const W = 360, H = 210, L = 34, R = 6, T = 10, B = 26, n = ordem.length;
+  const slot = (W - L - R) / n, bw = Math.max(8, slot * 0.62);
+  const maxV = Math.max(...ordem.map(k => Math.max(M[k].total, M[k].renda + M[k].pontualTot)), 1);
+  const passo = [500,1000,2000,2500,5000,10000].find(p => maxV / p <= 5) || 20000;
+  const topoV = Math.ceil(maxV * 1.04 / passo) * passo;
+  const y = v => T + (H - T - B) * (1 - v / topoV);
+  let s = '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Saída de cada mês por grupo, com a linha da renda recorrente">';
+  s += '<defs><pattern id="hach" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'+
+       '<rect width="2" height="4" fill="#fff" opacity=".55"/></pattern></defs>';
+  for (let v = 0; v <= topoV; v += passo){
+    s += '<line class="eixo" x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'"'+(v? ' stroke-dasharray="2 3"':'')+'/>';
+    s += '<text x="'+(L-4)+'" y="'+(y(v)+3)+'" text-anchor="end">'+(v>=1000? (v/1000).toLocaleString("pt-BR")+'k' : v)+'</text>';
+  }
+  ordem.forEach((k, i) => {
+    const m = M[k], x0 = L + i*slot, cx = x0 + slot/2, xb = cx - bw/2, sel = k === kSel;
+    if (sel) s += '<rect class="sel-fundo" x="'+(x0+1)+'" y="'+T+'" width="'+(slot-2)+'" height="'+(H-T-B+14)+'" rx="5"/>';
+    let acc = 0;
+    const pedacos = [];
+    GRUPOS.forEach(g => ["fato","est"].forEach(t => { const v = m.porGrupo[g.id][t];
+      if (v > 0.5) pedacos.push({g:g.id, t, v}); }));
+    pedacos.forEach((p, j) => {
+      const y1 = y(acc + p.v), y0 = y(acc), h = Math.max(0, y0 - y1), topoBarra = j === pedacos.length - 1;
+      const rx = topoBarra ? 3 : 0;
+      s += '<rect class="seg" x="'+xb+'" y="'+y1+'" width="'+bw+'" height="'+h+'" rx="'+rx+'" fill="var(--g-'+p.g+')"'+
+           (p.t === "est" ? ' opacity=".55"' : '')+'/>';
+      if (p.t === "est" && h > 3) s += '<rect x="'+xb+'" y="'+y1+'" width="'+bw+'" height="'+h+'" fill="url(#hach)"/>';
+      acc += p.v;
+    });
+    const rw = slot * 0.86;
+    s += '<line class="renda" x1="'+(cx-rw/2)+'" x2="'+(cx+rw/2)+'" y1="'+y(m.renda)+'" y2="'+y(m.renda)+'"/>';
+    if (m.pontualTot > 0.5) s += '<circle class="pontual" cx="'+cx+'" cy="'+y(m.renda + m.pontualTot)+'" r="3.5"/>';
+    s += '<text x="'+cx+'" y="'+(H-B+12)+'" text-anchor="middle"'+(sel?' class="mes-sel"':'')+'>'+MES3(m.mes)+'</text>';
+    if (m.mes.getMonth() === 0 || i === 0)
+      s += '<text x="'+cx+'" y="'+(H-B+23)+'" text-anchor="middle">'+String(m.mes.getFullYear()).slice(2)+'</text>';
+    s += '<rect class="alvo" data-k="'+k+'" x="'+x0+'" y="0" width="'+slot+'" height="'+H+'"><title>'+
+         MES3(m.mes)+'/'+m.mes.getFullYear()+': sai '+brl(m.total)+' · renda '+brl(m.renda)+'</title></rect>';
+  });
+  s += '</svg>';
+  el.innerHTML = s;
+  el.querySelectorAll(".alvo").forEach(r => r.addEventListener("click", () => {
+    const [a, mm] = r.dataset.k.split("-").map(Number);
+    mesAtual = new Date(a, mm-1, 1, 12, 0, 0); render(); }));
+
+  leg.innerHTML = GRUPOS.map(g => '<span><i style="background:var(--g-'+g.id+')"></i>'+g.nome+'</span>').join("") +
+    '<span><i class="le"></i>estimado</span><span><i class="lr"></i>renda que se repete</span>'+
+    '<span><i class="lp"></i>com entrada pontual</span>';
+
+  if (!b){
+    topo.innerHTML = '<span class="det">Este mês está fora dos 13 meses do gráfico. Toque numa barra ou use “Mês atual”.</span>';
+    tm.innerHTML = ""; tl.innerHTML = ""; return;
+  }
+
+  const sobra = b.renda - b.total;
+  const nomeM = MESES[b.mes.getMonth()];
+  topo.innerHTML = '<b>'+nomeM.charAt(0).toUpperCase()+nomeM.slice(1)+'</b>'+
+    '<span>sai <b class="num">'+brl(b.total)+'</b></span>'+
+    '<span>renda <b class="num">'+brl(b.renda)+'</b></span>'+
+    '<span class="'+(sobra<0?'neg':'pos')+'">'+(sobra<0?'falta ':'sobra ')+'<b class="num">'+brl(Math.abs(sobra))+'</b></span>'+
+    (b.pontualTot>0.5 ? '<span class="det">+ '+brl(b.pontualTot)+' pontual</span>' : '')+
+    (kSel === ordem[0] ? '<span class="det">inclui o que já saiu desde o dia 1</span>' : '');
+
+  const iAnt = ordem.indexOf(kSel) - 1;
+  let hm = '<tr class="grp-h"><td colspan="3">O que muda em relação '+(iAnt>=0? 'a '+MESES[M[ordem[iAnt]].mes.getMonth()] : 'ao mês anterior')+'</td></tr>';
+  if (iAnt < 0){
+    hm += '<tr><td colspan="3" class="det">Não há mês anterior no gráfico para comparar.</td></tr>';
+  } else {
+    const ant = M[ordem[iAnt]], mud = mudancas(ant, b);
+    const dr = b.renda - ant.renda;
+    if (Math.abs(dr) > 5)
+      mud.unshift({tipo:"renda", desc:"Renda que se repete", valor:b.renda, antes:ant.renda});
+    if (!mud.length) hm += '<tr><td colspan="3" class="det">Nada entra nem acaba; os mesmos itens com valores parecidos.</td></tr>';
+    const ic = {acaba:"🟢", entra:"🔴", muda:"🟡"};
+    mud.forEach(x => {
+      const tagC = x.cartao ? '<span class="etq">'+esc(x.cartao.nome.replace(/^Cartão /,""))+'</span>' : '';
+      let val, txt;
+      if (x.tipo === "renda"){
+        const sobe = x.valor > x.antes;
+        val = '<span class="'+(sobe?'pos':'neg')+'">'+(sobe?'+':'−')+brl(Math.abs(x.valor-x.antes))+'</span>';
+        txt = brl(x.antes)+' → '+brl(x.valor);
+        hm += '<tr><td>'+(sobe?'🟢':'🔴')+'</td><td><b>'+esc(x.desc)+'</b><div class="det">'+txt+'</div></td><td class="num">'+val+'</td></tr>';
+        return;
+      }
+      if (x.tipo === "muda"){
+        const d = x.valor - x.antes;
+        val = '<span class="'+(d>0?'neg':'pos')+'">'+(d>0?'+':'−')+brl(Math.abs(d))+'</span>';
+        txt = brl(x.antes)+' → '+brl(x.valor);
+      } else {
+        val = x.tipo === "acaba" ? '<span class="pos">−'+brl(x.valor)+'</span>' : '<span class="neg">+'+brl(x.valor)+'</span>';
+        txt = x.tipo === "acaba" ? 'acaba (não vem neste mês)' : 'entra neste mês';
+      }
+      hm += '<tr><td>'+ic[x.tipo]+'</td><td><b>'+esc(x.desc)+'</b><div class="det">'+txt+'</div>'+tagC+'</td><td class="num">'+val+'</td></tr>';
+    });
+  }
+  tm.innerHTML = hm;
+
+  let hl = '';
+  GRUPOS.forEach(g => {
+    const its = b.itens.filter(i => i.grupo === g.id).sort((p,q) => q.valor - p.valor);
+    if (!its.length) return;
+    const tot = its.reduce((s,i) => s + i.valor, 0);
+    hl += '<tr class="grp-h"><td><i style="background:var(--g-'+g.id+')"></i>'+g.nome+'</td><td class="num">'+brl(tot)+'</td></tr>';
+    its.forEach(i => {
+      const etqs = [];
+      if (i.cartao) etqs.push('<span class="etq">'+esc(i.cartao.nome.replace(/^Cartão /,""))+'</span>');
+      const rp = rotuloParcela(i); if (rp) etqs.push('<span class="etq">'+esc(rp)+'</span>');
+      if (i.est) etqs.push('<span class="etq est">estimado</span>');
+      if (i.categoria === "reembolso") etqs.push('<span class="etq ree">reembolsa</span>');
+      if (i.passado) etqs.push('<span class="etq">já saiu '+fmtDM(i.data)+'</span>');
+      hl += '<tr'+(i.est?' class="item-est"':'')+'><td>'+esc(i.desc)+'<div>'+etqs.join("")+'</div></td>'+
+            '<td class="num">'+brl(i.valor)+'</td></tr>';
+    });
+  });
+  const porC = new Map();
+  b.itens.filter(i => i.cartao).forEach(i => porC.set(i.cartao.id, (porC.get(i.cartao.id)||0) + i.valor));
+  if (porC.size){
+    hl += '<tr class="grp-h"><td>Faturas que vencem neste mês</td><td></td></tr>';
+    [...porC].sort((p,q) => q[1]-p[1]).forEach(([id, v]) => {
+      const cc = conta(id), f = FATURAS[id].find(x => chaveMes(x.vencimento) === kSel && x.vencimento >= BASE);
+      hl += '<tr><td>'+esc(cc.nome)+(f? '<div class="det">vence '+fmtDM(f.vencimento)+'</div>' : '')+'</td><td class="num">'+brl(v)+'</td></tr>';
+    });
+  }
+  if (Math.abs(b.diferenca) > 0.05)
+    hl += '<tr class="difer"><td><b>Diferença não explicada</b><div class="det">a soma dos itens não fecha com o saldo projetado do app</div></td>'+
+          '<td class="num">'+brl(b.diferenca)+'</td></tr>';
+  if (b.pontual.length){
+    hl += '<tr class="grp-h"><td>Entradas pontuais (fora da linha da renda)</td><td></td></tr>';
+    b.pontual.forEach(p => hl += '<tr><td>'+esc(p.desc)+'<div class="det">'+fmtDM(p.data)+'</div></td><td class="num pos">'+brl(p.valor)+'</td></tr>');
+  }
+  tl.innerHTML = hl || '<tr><td class="vazio">Nada previsto para este mês.</td></tr>';
+}
+
 const fmtDM = d => d.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"});
 function pintaBotoes(){
   try{
@@ -1396,7 +1724,7 @@ document.addEventListener("click", e => {
   v.classList.toggle("aberto");
 }, true);
 
-const TITULOS_MES = {resumo:"Mês", assin:"Assinaturas e contas do mês", dia:"Dia a dia", cat:"Gasto por categoria"};
+const TITULOS_MES = {resumo:"Mês", assin:"Assinaturas e contas do mês", dia:"Dia a dia", cat:"Gasto por categoria", comp:"Comparar meses"};
 let gatilhoGaveta = null;
 function sincVeu(){
   const aberta = !!document.querySelector(".gaveta:not([hidden])");
