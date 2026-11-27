@@ -1686,9 +1686,16 @@ const ICO_OK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stro
 const ICO_EXC = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 6v8"/><path d="M12 18.5v.01"/></svg>';
 const ICO_GRAVE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3l10 18H2z" stroke-linejoin="round"/><path d="M12 10v5"/><path d="M12 18.2v.01"/></svg>';
 
+function emFolha(){
+  const s = new Set();
+  ["recorrencias","parcelamentos","eventos_previstos","sazonais"].forEach(k =>
+    (DADOS[k]||[]).forEach(x => { if (x.em_folha) s.add(x.desc); }));
+  return s;
+}
 function contasQueVem(){
+  const folha = emFolha();
   return CAIXA.filter(m => m.tipo === "saida" && m.data >= BASE && m.origem !== "variavel" &&
-                           m.origem !== "real" && !m.confirmado);
+                           m.origem !== "real" && !m.confirmado && !folha.has(m.desc));
 }
 const diasAte = (d, hj) => Math.round((d - hj) / 864e5);
 function quandoTxt(d, hj){
@@ -1734,7 +1741,13 @@ function semaforo(){
     det:"Nesse dia a conta vai a "+brl(pior.s)+". "+
         (n <= 0 ? "É hoje." : n === 1 ? "Falta 1 dia para resolver." : "Faltam "+n+" dias para resolver.")};
 
-  return {AL, nivel:"verde",
+  let rot = SEM_ROTULO.verde;
+  if (PRIMEIRO_NEG){
+    const u = new Date(PRIMEIRO_NEG.data.getTime() - 864e5);
+    rot = "Tudo certo até "+u.getDate()+" de "+MESES[u.getMonth()]+
+          (diasAte(u, hj) > 330 ? " de "+u.getFullYear() : "");
+  }
+  return {AL, nivel:"verde", rot,
     tit:"O dinheiro dá para os próximos 30 dias",
     det:"O dia mais apertado é "+quando+", e mesmo nele sobram "+brl(pior.s)+"."};
 }
@@ -1750,7 +1763,7 @@ function pintaInicio(){
     card.className = "semaforo "+S.nivel;
     card.dataset.nivel = S.nivel;
     $("sem-ico").innerHTML = S.nivel === "verde" ? ICO_OK : ICO_EXC;
-    $("sem-rot").textContent = SEM_ROTULO[S.nivel];
+    $("sem-rot").textContent = S.rot || SEM_ROTULO[S.nivel];
     $("sem-tit").textContent = S.tit;
     $("sem-det").textContent = S.det;
     const nb = $("naosalvo");

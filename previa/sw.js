@@ -1,7 +1,7 @@
 /* Rede primeiro, cache so quando nao ha conexao. So a casca (codigo, sem nenhum
    dado). O cofre vem do GitHub, de outra origem, e a copia offline dele e guardada
    pelo app.js, cifrada. */
-const VERSAO = "705b07cd811a";
+const VERSAO = "c4834223a9a6";
 const CACHE = "fr-previa-" + VERSAO;   // previa: cache proprio, nao apaga o do app
 const ESSENCIAIS = ["./", "index.html", "app.js", "cofre.js", "app.tpl.html",
   "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
