@@ -13,7 +13,7 @@
   const CAMINHO = "cofre/dados.json.enc";
   const URL_COFRE = "https://api.github.com/repos/" + REPO + "/contents/" + CAMINHO;
   const CHAVE_LS = "fr_chave", TOKEN_LS = "fr_token", CACHE_COFRE = "fr-cofre";
-  const FILA_LS = "fr_fila", CONF_LS = "fr_conf";
+  const FILA_LS = "fr_fila", CONF_LS = "fr_conf", PAG_LS = "fr_pag";
   const RECARGA_MIN = 15;          // volta ao primeiro plano depois disso: recarrega
   const $ = id => document.getElementById(id);
   const carregadoEm = Date.now();
@@ -74,7 +74,8 @@
       (copiaDe ? " de " + new Date(copiaDe).toLocaleString("pt-BR",
         { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "");
     const naFila = FILA.filter(g => !g.enviado_em).length +
-                   CONFS.filter(c => !c.enviado_em).length;
+                   CONFS.filter(c => !c.enviado_em).length +
+                   PAGOS.filter(p => !p.enviado_em).length;
     if (naFila) txt += " · " + naFila + (naFila > 1 ? " na fila" : " na fila");
     BARRA.span.textContent = txt;
     BARRA.el.className = (dias >= 2 || offline || naFila) ? "velho" : "";
@@ -89,7 +90,7 @@
     const bt2 = document.createElement("button"); bt2.textContent = "Sair";
     bt2.title = "Esquece a chave e o token neste aparelho";
     bt2.onclick = async () => {
-      if ((FILA.length || CONFS.length) && !confirm("Há lançamentos na fila que ainda não foram para o "
+      if ((FILA.length || CONFS.length || PAGOS.length) && !confirm("Há lançamentos na fila que ainda não foram para o "
           + "Claude. Sair apaga a chave, mas a fila continua guardada neste aparelho. "
           + "Quer sair mesmo assim?")) return;
       ls.del(CHAVE_LS); ls.del(TOKEN_LS);
@@ -164,12 +165,23 @@
     return [c.competencia, c.desc, "confirmado", x.data,
             Number(x.valor).toFixed(2).replace(".", ","), x.conta].join(";");
   }
-  function blocoDaFila(itens, confs) {
+  /* uma linha de pagamento marcado (fatura ou conta avulsa, 27/11/2026):
+     vencimento;desc;tipo;data_paga;valor;conta[;cartao]. Nao e formato do
+     lanca.py: o Claude processa a mao (fatura pela receita de fatura paga,
+     avulsa tirando o evento e lancando o pagamento real). */
+  function linhaPago(p) {
+    const desc = p.desc.replace(/[;\n\r]/g, " ").trim();
+    return [p.venc, desc, p.tipo, p.data, Number(p.valor).toFixed(2).replace(".", ","), p.conta]
+      .concat(p.cartao ? [p.cartao] : []).join(";");
+  }
+  function blocoDaFila(itens, confs, pagos) {
     const partes = [];
     if (itens.length) partes.push("Gastos lançados no celular (" + itens.length + "):\n" +
       itens.map(linhaGasto).join("\n"));
     if (confs.length) partes.push("Contas marcadas no celular (" + confs.length + "):\n" +
       confs.map(linhaConf).join("\n"));
+    if (pagos && pagos.length) partes.push("Pagamentos marcados no celular (" + pagos.length + "):\n" +
+      pagos.map(linhaPago).join("\n"));
     return partes.join("\n\n");
   }
 
@@ -198,9 +210,25 @@
     });
   }
 
+  /* ================= pagamentos marcados (27/11/2026) =================
+     "Paguei" numa fatura ou conta avulsa de "Contas que vem ai". Fila propria
+     (fr_pag), separada de FILA e CONFS: o motor NAO le esta fila, entao saldo e
+     semaforo nao mudam; ela so tira o item da lista ate o Claude registrar.
+     Um item por vencimento+desc: o ultimo "Paguei" vale. */
+  let PAGOS = [];
+  function lePagos() {
+    try { PAGOS = JSON.parse(ls.get(PAG_LS) || "[]"); } catch (e) { PAGOS = []; }
+    if (!Array.isArray(PAGOS)) PAGOS = [];
+  }
+  function salvaPagos() {
+    try { localStorage.setItem(PAG_LS, JSON.stringify(PAGOS)); return true; }
+    catch (e) { return false; }
+  }
+
   function aplicaFila() {
     // o motor le a fila inteira, enviados inclusive, ate o Caio confirmar
     GASTOS_APP = FILA.map(g => ({ ...g }));
+    PAGOS_APP = PAGOS.map(p => ({ ...p }));
     calcula(); render(); renderLancar();
     if (BARRA) textoBarra();
   }
@@ -213,7 +241,7 @@
   function renderFila() {
     const cx = $("g-pendentes");
     cx.innerHTML = "";
-    if (!FILA.length && !CONFS.length) return;
+    if (!FILA.length && !CONFS.length && !PAGOS.length) return;
     cx.id = "g-pendentes";
     const div = document.createElement("div");
     div.id = "fila-cx";
@@ -222,7 +250,8 @@
     const tb = document.createElement("tbody");
     const cab = tb.insertRow();
     // o titulo nao pode dizer "na fila" quando ja foi tudo enviado
-    const titulo = (FILA.some(g => !g.enviado_em) || CONFS.some(c => !c.enviado_em))
+    const titulo = (FILA.some(g => !g.enviado_em) || CONFS.some(c => !c.enviado_em) ||
+                    PAGOS.some(p => !p.enviado_em))
       ? "Lançado no celular, ainda não enviado" : "Enviado, esperando o Claude lançar";
     [titulo, "Valor", ""].forEach((t, i) => {
       const th = document.createElement("th");
@@ -281,27 +310,54 @@
       };
       c3.appendChild(bap);
     });
+    PAGOS.forEach(p => {
+      const tr = tb.insertRow();
+      if (p.enviado_em) tr.className = "enviado";
+      const c1 = tr.insertCell();
+      c1.appendChild(document.createTextNode(p.desc));
+      const det = document.createElement("div");
+      det.className = "det";
+      const cc = typeof conta === "function" ? conta(p.conta) : null;
+      det.textContent = "paga " + dataBR(p.data) + " · " + ((cc && cc.nome) || p.conta) +
+        " · esperando o Claude" + (p.enviado_em ? " · enviado" : "");
+      c1.appendChild(det);
+      const c2 = tr.insertCell();
+      c2.className = "r num";
+      c2.textContent = vlr(Number(p.valor));
+      const c3 = tr.insertCell(); c3.className = "r";
+      const bap = document.createElement("button");
+      bap.type = "button"; bap.textContent = "Apagar";
+      bap.onclick = () => {
+        if (!confirm("Desfazer \"Paguei\" de \"" + p.desc + "\"? Ela volta para Contas que vêm aí.")) return;
+        PAGOS = PAGOS.filter(x => x !== p);
+        salvaPagos(); aplicaFila();
+      };
+      c3.appendChild(bap);
+    });
     tab.appendChild(tb); div.appendChild(tab);
 
     const naFila = FILA.filter(g => !g.enviado_em);
     const enviados = FILA.filter(g => g.enviado_em);
     const confNa = CONFS.filter(c => !c.enviado_em);
     const confEnv = CONFS.filter(c => c.enviado_em);
+    const pagNa = PAGOS.filter(p => !p.enviado_em);
+    const pagEnv = PAGOS.filter(p => p.enviado_em);
     const linha = document.createElement("div"); linha.className = "linha";
 
-    if (naFila.length || confNa.length) {
+    if (naFila.length || confNa.length || pagNa.length) {
       const bc = document.createElement("button");
       bc.type = "button"; bc.className = "primario";
       bc.id = "fila-copiar";
-      bc.textContent = "Copiar para o Claude (" + (naFila.length + confNa.length) + ")";
+      bc.textContent = "Copiar para o Claude (" + (naFila.length + confNa.length + pagNa.length) + ")";
       bc.onclick = async () => {
-        const texto = blocoDaFila(naFila, confNa);
+        const texto = blocoDaFila(naFila, confNa, pagNa);
         let copiou = false;
         try { await navigator.clipboard.writeText(texto); copiou = true; } catch (e) {}
         const agora = new Date().toISOString();
         naFila.forEach(g => { g.enviado_em = agora; });
         confNa.forEach(c => { c.enviado_em = agora; });
-        const gravou = salvaFila() && salvaConfs();
+        pagNa.forEach(p => { p.enviado_em = agora; });
+        const gravou = salvaFila() && salvaConfs() && salvaPagos();
         aplicaFila();
         const ta = $("fila-texto");
         if (ta) {
@@ -317,15 +373,16 @@
       };
       linha.appendChild(bc);
     }
-    if (enviados.length || confEnv.length) {
+    if (enviados.length || confEnv.length || pagEnv.length) {
       const be = document.createElement("button");
       be.type = "button"; be.id = "fila-entraram";
-      be.textContent = "Já entraram (" + (enviados.length + confEnv.length) + ")";
+      be.textContent = "Já entraram (" + (enviados.length + confEnv.length + pagEnv.length) + ")";
       be.title = "Tire da conta depois que o Claude confirmar que lançou";
       be.onclick = () => {
         FILA = FILA.filter(g => !g.enviado_em);
         CONFS = CONFS.filter(c => !c.enviado_em);
-        salvaFila(); salvaConfs(); aplicaFila();
+        PAGOS = PAGOS.filter(p => !p.enviado_em);
+        salvaFila(); salvaConfs(); salvaPagos(); aplicaFila();
       };
       linha.appendChild(be);
     }
@@ -340,7 +397,7 @@
     div.appendChild(ta);
 
     // avisos: fila parada, e enviado que o cofre ja deve ter absorvido
-    const velhos = naFila.filter(g => diasDesde(g.criado_em) >= 1);
+    const velhos = naFila.concat(pagNa).filter(g => diasDesde(g.criado_em) >= 1);
     if (velhos.length) {
       const a = document.createElement("div"); a.className = "aviso"; a.id = "fila-parada";
       const d = Math.max(...velhos.map(g => diasDesde(g.criado_em)));
@@ -350,7 +407,7 @@
       div.appendChild(a);
     }
     const base = (typeof DADOS === "object" && DADOS.atualizado_em) || "";
-    const jaNoCofre = enviados.concat(confEnv).filter(g => base > g.enviado_em.slice(0, 10));
+    const jaNoCofre = enviados.concat(confEnv, pagEnv).filter(g => base > g.enviado_em.slice(0, 10));
     if (jaNoCofre.length) {
       const a = document.createElement("div"); a.className = "aviso"; a.id = "fila-dobrada";
       a.textContent = "O cofre já é de " + dataBR(base) + ", depois do envio destes " +
@@ -376,7 +433,9 @@
       ["GASTOS_APP", () => { GASTOS_APP; return "ok"; }],
       ["gravaConfirmacao", () => typeof gravaConfirmacao],
       ["renderConfirma", () => typeof renderConfirma],
-      ["MEXIDAS", () => { MEXIDAS; return "ok"; }]
+      ["MEXIDAS", () => { MEXIDAS; return "ok"; }],
+      ["PAGOS_APP", () => { PAGOS_APP; return "ok"; }],
+      ["marcaPago", () => typeof marcaPago]
     ];
     const falta = precisa.filter(([, f]) => {
       try { return f() === "undefined"; } catch (e) { return true; }
@@ -386,6 +445,15 @@
     leFila();
     leConfs();
     reaplicaConfs();
+    lePagos();
+
+    // "Paguei" em fatura ou conta avulsa: fila propria, o motor nao muda
+    marcaPago = function (p) {
+      PAGOS = PAGOS.filter(x => !(x.venc === p.venc && x.desc === p.desc));
+      PAGOS.push({ ...p, criado_em: new Date().toISOString(), enviado_em: null });
+      if (!salvaPagos()) alert("Não consegui guardar neste aparelho. Copie para o Claude agora.");
+      aplicaFila();
+    };
 
     // cada clique na lista de contas do mes vai para a fila do aparelho
     const gravaOriginal = gravaConfirmacao;

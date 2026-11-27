@@ -287,6 +287,18 @@
   .vem-lista .nome .det{display:block;font-size:12px}
   .vem-lista .valor{font-size:15px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
   .vem-lista .vazio{background:none;padding:6px 2px;color:var(--fraco)}
+  
+  .vem-lista li.toca{padding:0}
+  .vem-lista .vem-item{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:12px 14px;
+                       border:0;border-radius:16px;background:none;color:inherit;text-align:left;cursor:pointer}
+  .vem-lista .vem-item:hover{background:#1E222A}
+  .vem-lista .seta{color:var(--fraco);font-size:20px;line-height:1;flex:none}
+  #ini-pagos{align-self:flex-start;color:var(--acento);text-align:left}
+  .pago-info{display:flex;flex-direction:column;gap:4px}
+  .pago-info b{font-size:17px}
+  #g-pago .campos{grid-template-columns:1fr 1fr}
+  #g-pago .campos label.largo{grid-column:1 / -1}
+  #pago-ok{flex:1 1 100%;min-height:54px;font-size:18px;font-weight:800;border-radius:16px}
   button.gastei{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:60px;
                 border:0;border-radius:20px;background:var(--acento);color:#06210F;font-size:19px;font-weight:800}
   button.gastei:hover{background:#2bd468}
@@ -341,6 +353,7 @@
     <div class="vem-cab"><h2 id="tit-vem">Contas que vêm aí</h2>
       <button type="button" class="link" data-abre="mes" data-sec="venc">ver todas</button></div>
     <ul class="vem-lista" id="ini-contas"></ul>
+    <button type="button" class="link" id="ini-pagos" hidden></button>
   </section>
 
   <button id="abre-lancar" class="gastei" type="button" aria-expanded="false" aria-controls="lancar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>Gastei</button>
@@ -457,6 +470,27 @@
     <div class="card"><table id="cartoes"><tbody></tbody></table></div>
     <h2>Dívidas</h2>
     <div class="card"><table id="dividas"><tbody></tbody></table></div>
+  </div>
+</section>
+
+<section id="g-pago" class="gaveta" role="dialog" aria-modal="true" aria-labelledby="tit-pago" hidden>
+  <header class="gaveta-cab"><div class="linha-cab"><h2 class="gaveta-tit" id="tit-pago" tabindex="-1">Marcar como paga</h2>
+    <button type="button" data-fecha>Fechar</button></div></header>
+  <div class="gaveta-corpo">
+    <div class="pago-info"><b id="pago-desc"></b><span class="det" id="pago-venc"></span></div>
+    <form id="form-pago" autocomplete="off">
+      <div class="campos">
+        <label>Valor pago (R$)<input id="pago-valor" type="number" inputmode="decimal" step="0.01" min="0.01" required></label>
+        <label>Data do pagamento<input id="pago-data" type="date" required></label>
+        <label class="largo">Saiu de<select id="pago-conta"></select></label>
+      </div>
+      <div class="acoes">
+        <button type="submit" class="primario" id="pago-ok">Paguei</button>
+        <span id="pago-msg" class="det" role="status"></span>
+      </div>
+    </form>
+    <p class="det">O saldo e o semáforo só mudam depois que o Claude registrar o pagamento. A conta sai da
+      lista agora e vai junto no <b>Copiar para o Claude</b> (no botão Gastei).</p>
   </div>
 </section>
 
@@ -586,6 +620,14 @@ function empurra(l){
 }
 
 let GASTOS_APP = [];
+
+let PAGOS_APP = [];
+const marcadoPago = m => PAGOS_APP.some(p => p.venc === iso(m.data) && p.desc === m.desc);
+function marcaPago(p){
+  PAGOS_APP = PAGOS_APP.filter(x => !(x.venc === p.venc && x.desc === p.desc)).concat([p]);
+  render();
+}
+
 function appParaModelo(){
   const ja = new Set([...(DADOS.lancamentos||[]), ...DADOS.parcelamentos]
                      .map(x => x.origem_app_id).filter(Boolean));
@@ -921,6 +963,7 @@ function render(){
           m.data.toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})+
           ' <span class="det">'+dsem+'</span></b><span class="det">'+quando+'</span></td><td>'+esc(m.desc)+
           (auto?'<span class="tag">débito automático</span>':'')+
+          (marcadoPago(m)?'<span class="tag">marcada como paga, esperando o Claude</span>':'')+
           '</td><td class="r"><span class="num">'+brl(m.valor)+'</span>'+
           '<div class="det num'+(m.saldo<0?" neg":"")+'" title="saldo depois desta conta">fica '+
           brl(m.saldo)+'</div></td></tr>';
@@ -1787,17 +1830,77 @@ function pintaInicio(){
       $("ini-cartao-det").textContent = "nenhum cartão de uso geral";
     }
 
-    const cv = contasQueVem().slice(0, 3);
+    const cv = contasQueVem().filter(m => !marcadoPago(m)).slice(0, 3);
+    CONTAS_INI = cv;
     $("ini-contas").innerHTML = !cv.length ? '<li class="vazio">Nenhuma conta a pagar à vista.</li>' :
-      cv.map(m => {
+      cv.map((m, i) => {
         const cc = m.cartao ? conta(m.cartao) : null;
         const extra = m.data < hj ? "a data já passou" : (cc && cc.debito_automatico ? "débito automático" : "");
-        return '<li><span class="dm"><b>'+String(m.data.getDate()).padStart(2,"0")+'</b><span>'+MES3(m.data)+
+        const acao = m.origem === "recorrencia" ? "Abrir em Contas do mês" : "Marcar como paga";
+        return '<li class="toca"><button type="button" class="vem-item" data-i="'+i+'" aria-label="'+
+          esc(m.desc+", "+brl(m.valor)+", dia "+fmtDM(m.data)+". "+acao)+'">'+
+          '<span class="dm"><b>'+String(m.data.getDate()).padStart(2,"0")+'</b><span>'+MES3(m.data)+
           '</span></span><span class="nome"><span class="txt">'+esc(m.desc)+'</span>'+(extra ? '<span class="det">'+extra+'</span>' : '')+
-          '</span><span class="valor">'+brl(m.valor)+'</span></li>';
+          '</span><span class="valor">'+brl(m.valor)+'</span><span class="seta" aria-hidden="true">›</span></button></li>';
       }).join("");
+    const np = PAGOS_APP.length, bp = $("ini-pagos");
+    bp.hidden = np === 0;
+    bp.textContent = np === 1 ? "1 conta marcada como paga, esperando o Claude ›"
+                              : np+" contas marcadas como pagas, esperando o Claude ›";
   }catch(e){ console.error("tela inicial falhou", e); }
 }
+
+let CONTAS_INI = [], PAGO_ATUAL = null;
+const tipoPagamento = m => m.kind === "fatura" ? "fatura" : "avulsa";
+
+function abreContaDoMes(m, gatilho){
+  abreGaveta("mes", "assin", gatilho);
+  const alvo = new Date(m.data.getFullYear(), m.data.getMonth(), 1, 12, 0, 0);
+  if (chaveMes(mesAtual) !== chaveMes(alvo)) mesAtual = alvo;
+  ABERTAS.add(m.desc);
+  render();
+  const b = [...document.querySelectorAll("#confirma .linha-abre")].find(x => x.dataset.linha === m.desc);
+  if (b){ b.scrollIntoView({block:"center"}); b.focus({preventScroll:true}); }
+}
+
+function abrePago(m, gatilho){
+  PAGO_ATUAL = m;
+  const $ = id => document.getElementById(id);
+  const fat = m.kind === "fatura";
+  $("tit-pago").textContent = fat ? "Fatura paga" : "Conta paga";
+  $("pago-desc").textContent = m.desc;
+  $("pago-venc").textContent = (fat ? "Vence " : "Prevista para ")+fmtDM(m.data)+" · valor previsto "+brl(m.valor);
+  $("pago-valor").value = m.valor.toFixed(2);
+  $("pago-data").value = hojeISO();
+  const sel = $("pago-conta");
+  sel.innerHTML = DADOS.contas.filter(c => c.tipo === "corrente")
+    .map(c => '<option value="'+c.id+'">'+esc(c.nome)+'</option>').join("");
+  if ([...sel.options].some(o => o.value === m.conta)) sel.value = m.conta;
+  $("pago-msg").textContent = "";
+  abreGaveta("pago", null, gatilho);
+}
+
+document.getElementById("ini-contas").addEventListener("click", ev => {
+  const b = ev.target.closest(".vem-item"); if (!b) return;
+  const m = CONTAS_INI[+b.dataset.i]; if (!m) return;
+  if (m.origem === "recorrencia") abreContaDoMes(m, b); else abrePago(m, b);
+});
+document.getElementById("ini-pagos").addEventListener("click", () =>
+  document.getElementById("abre-lancar").click());
+
+document.getElementById("form-pago").onsubmit = ev => {
+  ev.preventDefault();
+  const $ = id => document.getElementById(id);
+  const m = PAGO_ATUAL; if (!m) return;
+  const valor = Math.round(parseFloat($("pago-valor").value) * 100) / 100;
+  const data = $("pago-data").value;
+  if (!(valor > 0) || !data){ $("pago-msg").textContent = "Preencha valor e data."; return; }
+  marcaPago({ venc:iso(m.data), desc:m.desc, tipo:tipoPagamento(m), data, valor,
+              conta:$("pago-conta").value, cartao:m.cartao || null });
+  PAGO_ATUAL = null;
+  fechaGavetas(false);
+  const bp = $("ini-pagos"); if (!bp.hidden) bp.focus();
+};
 
 document.addEventListener("click", e => {
   const v = e.target.closest && e.target.closest(".sg");
